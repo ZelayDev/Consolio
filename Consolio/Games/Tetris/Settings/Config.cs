@@ -28,10 +28,10 @@ namespace Consolio.Tetris
                     new RGBColor(240, 160, 0)
                 ],
                 IndicatorColor = new RGBColor(200, 200, 200),
-                ScoreColor = new RGBColor(250, 80, 3),
-                LinesColor = new RGBColor(250, 230, 3),
-                LevelColor = new RGBColor(110, 250, 3),
-                
+                ScoreColor     = new RGBColor(250, 80, 3),
+                LinesColor     = new RGBColor(250, 230, 3),
+                LevelColor     = new RGBColor(110, 250, 3),
+
                 BorderStyle = new BorderStyle
                 {
                     Style = BorderLine.DoubleLine,
@@ -40,9 +40,9 @@ namespace Consolio.Tetris
                 Header = new ColorText
                 {
                     Text  = "===TETRIS===",
-                    Color = new RGBColor(240, 240, 240)
+                    Color = new RGBColor(211, 235, 33)
                 },
-                
+
                 Blocks =
                 [
                     "██  ",
@@ -52,7 +52,7 @@ namespace Consolio.Tetris
                     "▄█▀ ",
                     "▀█▄ ",
                     "▄▄▄▄"
-                
+
                     //"⣿⣿  "
                     //"⣤⣿⣤ "
                     //"⣤⣤⣿ "
@@ -65,7 +65,8 @@ namespace Consolio.Tetris
 
             Block       = "[]",
             Empty       = "[]",
-            InputBuffer = 5
+            InputBuffer = 5,
+            BlockQueue  = 3
         };
 
 
@@ -76,8 +77,12 @@ namespace Consolio.Tetris
 
         public string Block       { get; init; }
         public string Empty       { get; init; }
+        
         public int    InputBuffer { get; init; }
-                
+        public int    BlockQueue  { get; init; } //Max 15
+        
+        public RandomizerKind RandomizerKind { get; init; }
+
         public int ColorCount => Theme.Colors.Length;
     }
 }

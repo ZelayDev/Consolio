@@ -3,12 +3,12 @@ namespace Consolio.Tetris
     public sealed class Tetris
     {
         #region Data
-        private readonly Config     Config;
-        private readonly Field      Field;
-        private readonly Visualizer Visualizer;
-        private readonly Random     Random;
-
+        private readonly Config          Config;
+        private readonly Field           Field;
+        private readonly Visualizer      Visualizer;
         private readonly ExecutableQueue ExecutableQueue;
+
+        private readonly IBlockRandomizer BlockRandomizer;
 
         public readonly Observable<int> Score = new();
         public readonly Observable<int> Lines = new();
@@ -16,10 +16,12 @@ namespace Consolio.Tetris
 
         public readonly Observable<PlacedBlock> CurrentBlock = new();
         public readonly Observable<PlacedBlock> Shadow       = new();
-        public readonly Observable<Block>       NextBlock    = new();
+        public readonly Queue<Block>            NextBlocks;
 
-        private readonly int[]         PlacedBlocks = new int[7];
-        public event Action<int, int>? OnBlockPlaced;
+        private readonly int[] PlacedBlocks = new int[7];
+
+        public event Action<int, int>?     OnBlockPlaced;
+        public event Action<Queue<Block>>? NextBlocksChanged;
 
         private readonly Vector2Int StartBlockPosition;
 
@@ -36,10 +38,13 @@ namespace Consolio.Tetris
             Config     = LoadConfiguration();
             Field      = new Field(Config.FieldSize);
             Visualizer = new Visualizer(this, Field, Config);
-            Random     = new Random();
 
+            BlockRandomizer = GetRandomizer(Config.RandomizerKind, Config.ColorCount);
+            
             ExecutableQueue    = new ExecutableQueue(Config.InputBuffer);
             StartBlockPosition = GetStartBlockPosition(Config.FieldSize);
+
+            NextBlocks = new Queue<Block>(Config.BlockQueue);
 
             CurrentBlock.Changed += UpdateShadow;
             Lines.Changed        += UpdateLevel;
@@ -54,8 +59,8 @@ namespace Consolio.Tetris
             Console.CursorVisible = false;
 
             Visualizer.Initialize();
-            CurrentBlock.Value = new PlacedBlock(StartBlockPosition, GetRandomBlock());
-            NextBlock.Value    = GetRandomBlock();
+            CurrentBlock.Value = new PlacedBlock(StartBlockPosition, BlockRandomizer.Next());
+            FillBlockQueue();
 
             Delay = Config.Delay.StartDelay;
 
@@ -142,7 +147,7 @@ namespace Consolio.Tetris
                 case ConsoleKey.E:
                     RotateRight();
                     break;
-                
+
                 case ConsoleKey.Spacebar:
                     HardDrop();
                     break;
@@ -207,7 +212,7 @@ namespace Consolio.Tetris
             CurrentBlock.Value = Final;
             PlaceBlock(Final);
         }
-        
+
 
         private void Move(int Offset)
         {
@@ -223,8 +228,10 @@ namespace Consolio.Tetris
 
         private void ChangeBlock()
         {
-            CurrentBlock.Value = new PlacedBlock(StartBlockPosition, NextBlock.Value);
-            NextBlock.Value    = GetRandomBlock();
+            var NextBlock = NextBlocks.Dequeue();
+            NextBlocks.Enqueue(BlockRandomizer.Next());
+            CurrentBlock.Value = new PlacedBlock(StartBlockPosition, NextBlock);
+            NextBlocksChanged?.Invoke(NextBlocks);
         }
 
         private void PlaceBlock(PlacedBlock Block)
@@ -278,7 +285,7 @@ namespace Consolio.Tetris
                                .ToList();
 
             var ClearedCount = Cleared.Count;
-            
+
             if (ClearedCount == 0)
             {
                 return;
@@ -344,9 +351,15 @@ namespace Consolio.Tetris
             return Position;
         }
 
-        private Block GetRandomBlock()
+        private void FillBlockQueue()
         {
-            return Block.GetRandomBlock(Random, Config.ColorCount);
+            var Queue      = NextBlocks;
+            var Randomizer = BlockRandomizer;
+
+            for (var i = 0; i < Queue.Capacity; i++)
+            {
+                Queue.Enqueue(Randomizer.Next());
+            }
         }
 
 
@@ -358,6 +371,15 @@ namespace Consolio.Tetris
         private static Config LoadConfiguration()
         {
             return Config.Default; //TODO
+        }
+
+        private static IBlockRandomizer GetRandomizer(RandomizerKind Kind, int ColorCount)
+        {
+            return Kind switch
+            {
+                RandomizerKind.Bag => new BagRandomizer(ColorCount),
+                _ => new BlockRandomizer(ColorCount)
+            };
         }
         #endregion
     }

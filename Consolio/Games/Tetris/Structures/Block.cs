@@ -2,7 +2,7 @@ namespace Consolio.Tetris
 {
     public struct Block
     {
-        private const int BlockCount = 7;
+        public const int BlockCount = 7;
         
         private static readonly Vector2Int[] BlockCells =
         [
@@ -130,12 +130,9 @@ namespace Consolio.Tetris
         }
 
 
-        public static Block GetRandomBlock(Random Random, int ColorCount)
+        public static int GetNextId()
         {
-            var BlockIndex = Random.Next(BlockCount) << 4;
-            var ColorIndex = Random.Next(Config.ColorReserved, ColorCount);
-
-            return new Block(BlockIndex, ColorIndex, GlobalId++);
+            return GlobalId++;
         }
     }
 }

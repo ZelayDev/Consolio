@@ -34,7 +34,7 @@ namespace Consolio.Tetris
 
             Tetris.CurrentBlock.Changed += (_, _) => Update();
             Tetris.Shadow.Changed       += (_, _) => Update();
-            Tetris.NextBlock.Changed    += (_, _) => Update();
+            Tetris.NextBlocksChanged    += _ => Update();
 
             Tetris.Score.Changed += UpdateScore;
             Tetris.Lines.Changed += UpdateLines;
@@ -42,7 +42,7 @@ namespace Consolio.Tetris
 
             Tetris.CurrentBlock.Changed += UpdateBlock;
             Tetris.Shadow.Changed       += UpdateBlock;
-            Tetris.NextBlock.Changed    += UpdateNextBlock;
+            Tetris.NextBlocksChanged    += UpdateNextBlocks;
 
             Tetris.OnBlockPlaced += UpdateBlockCount;
 
@@ -120,7 +120,7 @@ namespace Consolio.Tetris
             DrawBlock(New);
         }
 
-        private void UpdateNextBlock(Block Old, Block New)
+        private void UpdateNextBlocks(Queue<Block> Queue)
         {
             
         }
@@ -204,7 +204,7 @@ namespace Consolio.Tetris
             var Colors         = Palette.AsSpan(2);
             var Theme          = Config.Theme;
             var IndicatorColor = Theme.IndicatorColor;
-            
+
             void AddBlock(Span<string> Colors, int ColorIndex)
             {
                 Builder.Append(Colors[ColorIndex % Colors.Length])
@@ -215,7 +215,7 @@ namespace Consolio.Tetris
             }
 
             Builder.Append("\n").SetCursorX(CursorX);
-            
+
             AddBlock(Colors, 0);
             AddBlock(Colors, 1);
             AddBlock(Colors, 2);
