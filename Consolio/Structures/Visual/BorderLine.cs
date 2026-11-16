@@ -1,4 +1,4 @@
-namespace Tetris
+namespace Consolio
 {
     public enum BorderLine
     {

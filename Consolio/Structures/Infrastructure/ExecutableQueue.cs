@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace Tetris
+namespace Consolio
 {
     public sealed class ExecutableQueue
     {

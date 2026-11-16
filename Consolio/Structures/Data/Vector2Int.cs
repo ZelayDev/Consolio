@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace Tetris
+namespace Consolio
 {
     [Serializable, StructLayout(LayoutKind.Sequential)]
     public struct Vector2Int : IEquatable<Vector2Int>

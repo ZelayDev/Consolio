@@ -1,45 +1,33 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-
-namespace Tetris
+namespace Consolio.Tetris
 {
     public sealed class Tetris
     {
         #region Data
-        private readonly Configuration Config;
-        private readonly Field         Field;
-        private readonly Visualizer    Visualizer;
-        private readonly Random        Random;
+        private readonly Config     Config;
+        private readonly Field      Field;
+        private readonly Visualizer Visualizer;
+        private readonly Random     Random;
 
         private readonly ExecutableQueue ExecutableQueue;
-
-        public readonly Observable<PlacedBlock> CurrentBlock = new();
-        public readonly Observable<PlacedBlock> Shadow       = new();
-        public readonly Observable<Block>       NextBlock    = new();
 
         public readonly Observable<int> Score = new();
         public readonly Observable<int> Lines = new();
         public readonly Observable<int> Level = new();
 
+        public readonly Observable<PlacedBlock> CurrentBlock = new();
+        public readonly Observable<PlacedBlock> Shadow       = new();
+        public readonly Observable<Block>       NextBlock    = new();
+
+        private readonly int[]         PlacedBlocks = new int[7];
+        public event Action<int, int>? OnBlockPlaced;
+
         private readonly Vector2Int StartBlockPosition;
 
         private CancellationTokenSource? GameLoopCancellationToken;
 
+        private int Delay;
+
         private bool Paused;
-        #endregion
-
-        #region Properties
-        private Vector2Int BlockPosition
-        {
-            get => CurrentBlock.Value.Position;
-            set => CurrentBlock.Value = new PlacedBlock(value, CurrentBlock.Value);
-        }
-
-        private Block Block
-        {
-            get => CurrentBlock.Value.Block;
-            set => CurrentBlock.Value = new PlacedBlock(CurrentBlock.Value.Position, value);
-        }
         #endregion
 
         #region Constructors
@@ -53,7 +41,9 @@ namespace Tetris
             ExecutableQueue    = new ExecutableQueue(Config.InputBuffer);
             StartBlockPosition = GetStartBlockPosition(Config.FieldSize);
 
-            CurrentBlock.Changed += UpdateShadowPosition;
+            CurrentBlock.Changed += UpdateShadow;
+            Lines.Changed        += UpdateLevel;
+            Level.Changed        += UpdateDelay;
         }
         #endregion
 
@@ -64,8 +54,10 @@ namespace Tetris
             Console.CursorVisible = false;
 
             Visualizer.Initialize();
-            NextBlock.Value = GetRandomBlock();
-            ChangeBlock();
+            CurrentBlock.Value = new PlacedBlock(StartBlockPosition, GetRandomBlock());
+            NextBlock.Value    = GetRandomBlock();
+
+            Delay = Config.Delay.StartDelay;
 
             Score.Value = 0;
             Lines.Value = 0;
@@ -83,7 +75,7 @@ namespace Tetris
                 await QueueTask;
             }
             catch (OperationCanceledException) { }
-            
+
             try
             {
                 await GameTask;
@@ -103,7 +95,7 @@ namespace Tetris
             {
                 while (!Token.IsCancellationRequested)
                 {
-                    await Task.Delay(Config.Delay, Token);
+                    await Task.Delay(Delay, Token);
                     ExecutableQueue.AddPriority(Lower);
                 }
             }
@@ -117,7 +109,7 @@ namespace Tetris
                 while (!Token.IsCancellationRequested)
                 {
                     var Key = Console.ReadKey(true).Key;
-                    
+
                     if (HandleKey(Key))
                     {
                         GameLoopCancellationToken!.Cancel();
@@ -133,24 +125,42 @@ namespace Tetris
 
         private bool HandleKey(ConsoleKey Key)
         {
+            switch (Key)
+            {
+                case ConsoleKey.A:
+                    MoveLeft();
+                    break;
+
+                case ConsoleKey.D:
+                    MoveRight();
+                    break;
+
+                case ConsoleKey.Q:
+                    RotateLeft();
+                    break;
+
+                case ConsoleKey.E:
+                    RotateRight();
+                    break;
+            }
+
             return false;
         }
 
 
         private void Lower()
         {
-            var NewPosition = BlockPosition;
+            var Block       = CurrentBlock.Value;
+            var NewPosition = Block.Position;
             NewPosition.Y--;
 
-            if (Field.Overlaps(NewPosition, Block))
+            if (Field.Overlaps(NewPosition, Block.Block))
             {
-                Field.Add(BlockPosition, Block);
-                RemoveFullLines(BlockPosition, Block);
-                ChangeBlock();
+                PlaceBlock(Block);
             }
             else
             {
-                BlockPosition = NewPosition;
+                CurrentBlock.Value = new PlacedBlock(NewPosition, Block.Block);
             }
         }
 
@@ -167,34 +177,36 @@ namespace Tetris
 
         private void RotateLeft()
         {
-            var Rotated = Block.RotateLeft();
-            if (!Field.Overlaps(BlockPosition, Rotated))
+            var Block   = CurrentBlock.Value;
+            var Rotated = Block.Block.RotateLeft();
+            if (!Field.Overlaps(Block.Position, Rotated))
             {
-                Block = Rotated;
+                CurrentBlock.Value = new PlacedBlock(Block.Position, Rotated);
             }
         }
 
         private void RotateRight()
         {
-            var Rotated = Block.RotateRight();
-            if (!Field.Overlaps(BlockPosition, Rotated))
+            var Block   = CurrentBlock.Value;
+            var Rotated = Block.Block.RotateRight();
+            if (!Field.Overlaps(Block.Position, Rotated))
             {
-                Block = Rotated;
+                CurrentBlock.Value = new PlacedBlock(Block.Position, Rotated);
             }
         }
 
 
         private void Move(int Offset)
         {
-            var NewPosition = BlockPosition;
+            var Block       = CurrentBlock.Value;
+            var NewPosition = Block.Position;
             NewPosition.X += Offset;
 
-            if (!Field.Overlaps(NewPosition, Block))
+            if (!Field.Overlaps(NewPosition, Block.Block))
             {
-                BlockPosition = NewPosition;
+                CurrentBlock.Value = new PlacedBlock(NewPosition, Block.Block);
             }
         }
-
 
         private void ChangeBlock()
         {
@@ -202,11 +214,49 @@ namespace Tetris
             NextBlock.Value    = GetRandomBlock();
         }
 
-
-        private void UpdateShadowPosition(PlacedBlock Old, PlacedBlock New)
+        private void PlaceBlock(PlacedBlock Block)
         {
-            Shadow.Value = new PlacedBlock(GetShadowPosition(New), new Block(New.Block, 1));
+            Field.Add(Block.Position, Block.Block);
+            RemoveFullLines(Block.Position, Block.Block);
+            ChangeBlock();
+
+            var BlockIndex = Block.Block.Index >> 4;
+            var Count      = PlacedBlocks[BlockIndex] + 1;
+            PlacedBlocks[BlockIndex] = Count;
+            OnBlockPlaced?.Invoke(BlockIndex, Count);
         }
+
+
+        private void UpdateLevel(int OldLines, int NewLines)
+        {
+            var Current = Level.Value;
+            var Target  = Math.Min(20, NewLines / 10);
+
+            if (Target != Current)
+            {
+                Level.Value = Target;
+
+                if (Target >= 20)
+                {
+                    Lines.Changed -= UpdateLevel;
+                }
+            }
+        }
+
+        private void UpdateDelay(int OldLevel, int NewLevel)
+        {
+            var DelayConfig = Config.Delay;
+            Delay = (int)Single.Lerp(DelayConfig.StartDelay, DelayConfig.MinDelay, NewLevel / 20f);
+        }
+
+        private void UpdateShadow(PlacedBlock Old, PlacedBlock New)
+        {
+            if (Old.Block != New.Block || Old.Position.X != New.Position.X)
+            {
+                Shadow.Value = new PlacedBlock(GetShadowPosition(New), new Block(New.Block.Index, 1, New.Block.Id));
+            }
+        }
+
 
         private void RemoveFullLines(Vector2Int BlockPosition, Block Block)
         {
@@ -214,38 +264,55 @@ namespace Tetris
                                .Where(Field.IsFullLine)
                                .ToList();
 
-            if (Cleared.Count == 0)
+            var ClearedCount = Cleared.Count;
+            
+            if (ClearedCount == 0)
             {
                 return;
             }
 
+            Lines.Value += ClearedCount;
+            Score.Value += ClearedCount switch
+            {
+                1 => 100,
+                2 => 300,
+                3 => 500,
+                4 => 1000,
+                _ => 0
+            };
+
             Cleared.Sort();
 
-            var Shift        = 0;
-            var ClearedIndex = Cleared.Count - 1;
+            RemoveLines(Cleared);
 
-            for (var ReadY = Field.Height - 1; ReadY >= 0; ReadY--)
+            Visualizer.UpdateLinesAbove(Cleared[0]);
+        }
+
+        private void RemoveLines(List<int> Lines)
+        {
+            var Shift     = 0;
+            var LineIndex = 0;
+
+            for (var ReadY = 0; ReadY < Field.Height; ReadY++)
             {
-                if (ClearedIndex >= 0 && ReadY == Cleared[ClearedIndex])
+                if (LineIndex < Lines.Count && ReadY == Lines[LineIndex])
                 {
                     Shift++;
-                    ClearedIndex--;
+                    LineIndex++;
                     continue;
                 }
 
-                var WriteY = ReadY + Shift;
+                var WriteY = ReadY - Shift;
                 if (WriteY != ReadY)
                 {
                     Field.CopyRow(ReadY, WriteY);
                 }
             }
 
-            for (var Y = 0; Y < Cleared.Count; Y++)
+            for (var Y = Field.Height - Shift; Y < Field.Height; Y++)
             {
                 Field.ClearRow(Y);
             }
-
-            Visualizer.UpdateLinesAbove(Cleared[0]);
         }
 
 
@@ -259,6 +326,8 @@ namespace Tetris
                 Position.Y--;
             }
 
+            Position.Y++;
+
             return Position;
         }
 
@@ -270,12 +339,12 @@ namespace Tetris
 
         private static Vector2Int GetStartBlockPosition(Vector2Int FieldSize)
         {
-            return new Vector2Int(FieldSize.X >> 1, FieldSize.Y + 2);
+            return new Vector2Int((FieldSize.X >> 1) - 1, FieldSize.Y + 2);
         }
 
-        private static Configuration LoadConfiguration()
+        private static Config LoadConfiguration()
         {
-            return Configuration.Default; //TODO
+            return Config.Default; //TODO
         }
         #endregion
     }

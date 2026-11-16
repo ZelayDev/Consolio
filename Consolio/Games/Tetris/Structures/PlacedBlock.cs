@@ -1,4 +1,4 @@
-namespace Tetris
+namespace Consolio.Tetris
 {
     public readonly struct PlacedBlock
     {
@@ -8,19 +8,19 @@ namespace Tetris
         public PlacedBlock(Vector2Int Position, Block Block)
         {
             this.Position = Position;
-            this.Block = Block;
+            this.Block    = Block;
         }
 
         public PlacedBlock(Vector2Int Position, PlacedBlock Block)
         {
             this.Position = Position;
-            this.Block = Block.Block;
+            this.Block    = Block.Block;
         }
-        
-        public PlacedBlock(PlacedBlock Place, Block Block)
+
+
+        public IEnumerable<Vector2Int> EnumerateAbsolutePositions()
         {
-            this.Position = Place.Position;
-            this.Block = Block;
+            return Block.EnumerateCells(Position);
         }
     }
 }

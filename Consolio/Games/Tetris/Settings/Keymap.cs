@@ -1,4 +1,4 @@
-namespace Tetris
+namespace Consolio.Tetris
 {
     public sealed class Keymap
     {

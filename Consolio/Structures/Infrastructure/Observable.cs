@@ -1,4 +1,4 @@
-namespace Tetris
+namespace Consolio
 {
     public sealed class Observable<T>
     {

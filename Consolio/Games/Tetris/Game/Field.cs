@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Tetris
+namespace Consolio.Tetris
 {
     public sealed class Field
     {
@@ -33,13 +33,20 @@ namespace Tetris
             var Size  = this.Size;
             var Cells = this.Cells;
 
-            bool CheckCell(Vector2Int Cell)
+            foreach (var Cell in Block.EnumerateCells(Position))
             {
-                return !(Cell >= Vector2Int.Zero && Cell.X < Size.X
-                    && (Cell.Y >= Size.Y || Cells[Cell.X, Cell.Y] != 0));
+                if (Cell.Y >= Size.Y)
+                {
+                    continue;
+                }
+                if (Cell.X < 0 || Cell.X >= Size.X || Cell.Y < 0
+                    || Cells[Cell.X, Cell.Y] != 0)
+                {
+                    return true;
+                }
             }
 
-            return Block.EnumerateCells(Position).Where(Cell => Cell.Y < Size.Y).Any(CheckCell);
+            return false;
         }
 
         public bool IsFullLine(int Line)
@@ -78,27 +85,21 @@ namespace Tetris
             }
         }
 
-        public void CopyTo(Field DestinationField)
-        {
-            var Source      = Cells;
-            var Destination = DestinationField.Cells;
-            Buffer.BlockCopy(Source, 0, Destination, 0, Size.X * Size.Y * sizeof(int));
-        }
-
 
         public void CopyRow(int From, int To)
         {
-            Buffer.BlockCopy
-            (
-                Cells, From * Width * sizeof(int),
-                Cells, To * Width * sizeof(int),
-                Width * sizeof(int)
-            );
+            for (var X = 0; X < Width; X++)
+            {
+                Cells[X, To] = Cells[X, From];
+            }
         }
 
         public void ClearRow(int Line)
         {
-            Array.Clear(Cells, Line * Width, Width);
+            for (var X = 0; X < Width; X++)
+            {
+                Cells[X, Line] = 0;
+            }
         }
     }
 }
