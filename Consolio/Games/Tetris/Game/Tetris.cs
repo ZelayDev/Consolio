@@ -142,6 +142,10 @@ namespace Consolio.Tetris
                 case ConsoleKey.E:
                     RotateRight();
                     break;
+                
+                case ConsoleKey.Spacebar:
+                    HardDrop();
+                    break;
             }
 
             return false;
@@ -195,6 +199,15 @@ namespace Consolio.Tetris
             }
         }
 
+
+        private void HardDrop()
+        {
+            var Block = CurrentBlock.Value;
+            var Final = new PlacedBlock(Shadow.Value.Position, Block.Block);
+            CurrentBlock.Value = Final;
+            PlaceBlock(Final);
+        }
+        
 
         private void Move(int Offset)
         {

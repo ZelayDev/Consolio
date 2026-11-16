@@ -41,7 +41,26 @@ namespace Consolio.Tetris
                 {
                     Text  = "===TETRIS===",
                     Color = new RGBColor(240, 240, 240)
-                }
+                },
+                
+                Blocks =
+                [
+                    "██  ",
+                    "▄█▄ ",
+                    "▄▄█ ",
+                    "█▄▄ ",
+                    "▄█▀ ",
+                    "▀█▄ ",
+                    "▄▄▄▄"
+                
+                    //"⣿⣿  "
+                    //"⣤⣿⣤ "
+                    //"⣤⣤⣿ "
+                    //"⣿⣤⣤ "
+                    //"⣤⣿⠛ "
+                    //"⠛⣿⣤ "
+                    //"⣤⣤⣤⣤"
+                ]
             },
 
             Block       = "[]",
@@ -58,7 +77,7 @@ namespace Consolio.Tetris
         public string Block       { get; init; }
         public string Empty       { get; init; }
         public int    InputBuffer { get; init; }
-
+                
         public int ColorCount => Theme.Colors.Length;
     }
 }

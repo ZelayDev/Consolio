@@ -11,5 +11,7 @@ namespace Consolio.Tetris
         
         public BorderStyle BorderStyle    { get; init; }
         public ColorText   Header         { get; init; }
+        
+        public string[] Blocks { get; init; }
     }
 }

@@ -202,26 +202,27 @@ namespace Consolio.Tetris
         {
             var Builder        = new StringBuilder(256);
             var Colors         = Palette.AsSpan(2);
-            var IndicatorColor = Config.Theme.IndicatorColor;
-
-            void AddBlock(Span<string> Colors, string Block, int ColorIndex)
+            var Theme          = Config.Theme;
+            var IndicatorColor = Theme.IndicatorColor;
+            
+            void AddBlock(Span<string> Colors, int ColorIndex)
             {
                 Builder.Append(Colors[ColorIndex % Colors.Length])
-                       .Append(Block)
+                       .Append(Theme.Blocks[ColorIndex])
                        .SetColor(IndicatorColor)
-                       .Append("..........0\n\n")
+                       .Append(" .........0\n\n")
                        .SetCursorX(CursorX);
             }
 
             Builder.Append("\n").SetCursorX(CursorX);
-
-            AddBlock(Colors, "⣿⣿  ", 0);
-            AddBlock(Colors, "⣤⣿⣤ ", 1);
-            AddBlock(Colors, "⣤⣤⣿ ", 2);
-            AddBlock(Colors, "⣿⣤⣤ ", 3);
-            AddBlock(Colors, "⣤⣿⠛ ", 4);
-            AddBlock(Colors, "⠛⣿⣤ ", 5);
-            AddBlock(Colors, "⣤⣤⣤⣤", 6);
+            
+            AddBlock(Colors, 0);
+            AddBlock(Colors, 1);
+            AddBlock(Colors, 2);
+            AddBlock(Colors, 3);
+            AddBlock(Colors, 4);
+            AddBlock(Colors, 5);
+            AddBlock(Colors, 6);
 
             Builder.ResetColor();
 
