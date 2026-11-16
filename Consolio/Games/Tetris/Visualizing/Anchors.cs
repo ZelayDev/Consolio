@@ -36,12 +36,12 @@ namespace Consolio.Tetris
         {
             HeaderLength = Config.Theme.Header.Length;
             BlockLength  = Config.Block.Length;
-
+            
             HeaderSize         = new Vector2Int(HeaderLength + 2, 3);
             FieldSize          = new Vector2Int(BlockLength * Config.FieldSize.X + 2, Config.FieldSize.Y + 2);
             StatisticSize      = new Vector2Int(19, 5);
-            NextBlockSize      = new Vector2Int(BlockLength * 5 + 2, 7);
-            KeymapSize         = new Vector2Int(20, 15);
+            NextBlockSize      = new Vector2Int(19, 7);
+            KeymapSize         = new Vector2Int(19, 15);
             BlockStatisticSize = new Vector2Int(19, 17);
         }
 
