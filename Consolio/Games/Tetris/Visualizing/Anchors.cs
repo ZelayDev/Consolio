@@ -40,8 +40,8 @@ namespace Consolio.Tetris
             HeaderSize         = new Vector2Int(HeaderLength + 2, 3);
             FieldSize          = new Vector2Int(BlockLength * Config.FieldSize.X + 2, Config.FieldSize.Y + 2);
             StatisticSize      = new Vector2Int(19, 5);
-            NextBlockSize      = new Vector2Int(19, 7);
-            KeymapSize         = new Vector2Int(19, 15);
+            NextBlockSize      = new Vector2Int(19, 12);
+            KeymapSize         = new Vector2Int(19, 10);
             BlockStatisticSize = new Vector2Int(19, 17);
         }
 

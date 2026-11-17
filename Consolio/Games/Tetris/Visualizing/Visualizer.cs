@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace Consolio.Tetris
@@ -35,14 +36,16 @@ namespace Consolio.Tetris
 
         public void Initialize()
         {
-            Tetris.Score.Changed += (_, _) => Update();
-            Tetris.Lines.Changed += (_, _) => Update();
-            Tetris.Level.Changed += (_, _) => Update();
+            Tetris.Paused.Changed += Update;
+            Tetris.Score.Changed += Update;
+            Tetris.Lines.Changed += Update;
+            Tetris.Level.Changed += Update;
 
-            Tetris.CurrentBlock.Changed += (_, _) => Update();
-            Tetris.Shadow.Changed       += (_, _) => Update();
+            Tetris.CurrentBlock.Changed += Update;
+            Tetris.Shadow.Changed       += Update;
             Tetris.NextBlocksChanged    += _ => Update();
 
+            Tetris.Paused.Changed += UpdatePaused;
             Tetris.Score.Changed += UpdateScore;
             Tetris.Lines.Changed += UpdateLines;
             Tetris.Level.Changed += UpdateLevel;
@@ -110,6 +113,11 @@ namespace Consolio.Tetris
         }
 
 
+        private void Update<T>(T A, T B)
+        {
+            Update();
+        }
+        
         private void Update()
         {
             if (Anchors.Update())
@@ -136,27 +144,31 @@ namespace Consolio.Tetris
 
         private void UpdateScore(int Old, int New)
         {
-            UpdateStatistic(Anchors.ScorePosition, New);
+            UpdateIndicator(Anchors.ScorePosition, New);
         }
 
         private void UpdateLines(int Old, int New)
         {
-            UpdateStatistic(Anchors.LinesPosition, New);
+            UpdateIndicator(Anchors.LinesPosition, New);
         }
 
         private void UpdateLevel(int Old, int New)
         {
-            UpdateStatistic(Anchors.LevelPosition, New);
+            UpdateIndicator(Anchors.LevelPosition, New);
         }
 
         private void UpdateBlockCount(int Index, int Count)
         {
             var String   = Count.ToString();
-            var Position = Anchors.BlockStatisticContent + new Vector2Int(15 - String.Length, Index * 2 + 1);
+            var Position = Anchors.BlockStatisticContent + new Vector2Int(Anchors.BlockStatisticSize.X - 4 - String.Length, Index * 2 + 1);
             var Builder  = new StringBuilder(64);
 
             Builder.SetCursorPosition(Position).SetColor(Config.Theme.IndicatorColor).Append(String).ResetColor();
             Console.Out.Write(Builder);
+        }
+
+        private void UpdatePaused(bool Old, bool New)
+        {
         }
 
 
@@ -191,6 +203,7 @@ namespace Consolio.Tetris
             //Keymap
             SetCursorPosition(Anchors.KeymapPosition);
             WriteBorder(Anchors.KeymapSize);
+            DrawKeymap();
         }
 
         private void DrawStatisticUI()
@@ -199,26 +212,39 @@ namespace Consolio.Tetris
             var Theme   = Config.Theme;
             var Builder = new StringBuilder(128);
 
-            Builder.SetColor(Theme.ScoreColor).Append("SCORE: \n").SetCursorX(CursorX);
-            Builder.SetColor(Theme.LinesColor).Append("LINES: \n").SetCursorX(CursorX);
-            Builder.SetColor(Theme.LevelColor).Append("LEVEL: ");
+            void AppendIndicator(string Indicator, RGBColor Color, bool IsNotLast = true)
+            {
+                Builder.SetColor(Color).Append(Indicator);
+                Builder.SetColor(Theme.LeaderDots).Append('.', 9);
+                if (IsNotLast)
+                {
+                    Builder.Append('\n').SetCursorX(CursorX);
+                }
+            }
+
+            AppendIndicator("SCORE: ", Theme.ScoreColor);
+            AppendIndicator("LINES: ", Theme.LinesColor);
+            AppendIndicator("LEVEL: ", Theme.LevelColor, false);
 
             Console.Out.Write(Builder);
         }
 
         private void DrawBlockStatisticUI(int CursorX)
         {
-            var Builder        = new StringBuilder(256);
-            var Colors         = Palette.AsSpan(2);
-            var Theme          = Config.Theme;
-            var IndicatorColor = Theme.IndicatorColor;
+            var Builder         = new StringBuilder(256);
+            var Colors          = Palette.AsSpan(2);
+            var Theme           = Config.Theme;
+            var LeaderDotsColor = Theme.LeaderDots;
+            var IndicatorColor  = Theme.IndicatorColor;
 
             void AddBlock(Span<string> Colors, int ColorIndex)
             {
                 Builder.Append(Colors[ColorIndex % Colors.Length])
                        .Append(Theme.Blocks[ColorIndex])
+                       .SetColor(LeaderDotsColor)
+                       .Append(" .........")
                        .SetColor(IndicatorColor)
-                       .Append(" .........0\n\n")
+                       .Append("0\n\n")
                        .SetCursorX(CursorX);
             }
 
@@ -237,6 +263,66 @@ namespace Consolio.Tetris
             Console.Out.Write(Builder);
         }
 
+        private void DrawKeymap()
+        {
+            var Keymap  = Config.Keymap;
+            var Builder = new StringBuilder(256);
+            
+            var CursorX         = Anchors.KeymapPosition.X + 1;
+            var IconColor       = Config.Theme.KeymapIcons;
+            var BindsColor      = Config.Theme.KeymapBinds;
+            var LeaderDotsColor = Config.Theme.LeaderDots;
+            
+            var TotalWidth = Anchors.KeymapSize.X - 4;
+            
+            void AppendBinds(char Action, ConsoleKey[] Keys, bool IsNotLast = true)
+            {
+                var Count = Math.Min(8, Keys.Length);
+                
+                Builder.SetColor(IconColor)
+                       .Append(Action);
+
+                Builder.Append(' ');
+                
+                Builder.SetColor(LeaderDotsColor)
+                       .Append('.', TotalWidth - Count * 2 - 2);
+                
+                Builder.Append(' ');
+                
+                if (Count >= 1)
+                {
+                    Builder.SetColor(BindsColor);
+                    Builder.Append(Keys[0].ToChar());
+                }
+                
+                for (int i = 1; i < Count; i++)
+                {
+                    Builder.Append(' ');
+                    Builder.Append(Keys[i].ToChar());
+                }
+
+                if (IsNotLast)
+                {
+                    Builder.Append('\n').SetCursorX(CursorX);
+                }
+            }
+
+            Builder.Append(' ');
+            
+            AppendBinds('◀', Keymap.MoveLeft);
+            AppendBinds('▶', Keymap.MoveRight);
+            AppendBinds('↺', Keymap.RotateLeft);
+            AppendBinds('↻', Keymap.RotateRight);
+            AppendBinds('⤓', Keymap.HardDrop);
+            AppendBinds('⏸', Keymap.Pause);
+            AppendBinds('▷', Keymap.Resume);
+            AppendBinds('✕', Keymap.Exit, false);
+
+            Builder.ResetColor();
+            
+            Console.Out.Write(Builder);
+        }
+        
 
         private void WriteBorder(Vector2Int Size)
         {
@@ -286,13 +372,16 @@ namespace Consolio.Tetris
             ResetColor();
         }
 
-        private void UpdateStatistic(Vector2Int Position, int New)
+        private void UpdateIndicator(Vector2Int Position, int Value)
         {
             var Builder = new StringBuilder(64);
-            Builder.SetCursorPosition(Position)
+            var String  = Value.ToString();
+            
+            Builder.SetCursorPosition(new Vector2Int(Position.X + 9 - String.Length, Position.Y))
                    .SetColor(Config.Theme.IndicatorColor)
-                   .Append(New.ToString().PadLeft(9, '.'))
+                   .Append(String)
                    .ResetColor();
+            
             Console.Out.Write(Builder);
         }
 

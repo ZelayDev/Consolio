@@ -14,6 +14,7 @@ namespace Consolio.Tetris
             },
 
             Theme = Theme.Default,
+            Keymap = Keymap.Default,
             
             Block       = "[]",
             Empty       = "[]",
@@ -24,7 +25,8 @@ namespace Consolio.Tetris
         public Vector2Int FieldSize { get; init; }
         public Delay      Delay     { get; init; }
 
-        public Theme Theme { get; init; }
+        public Theme  Theme  { get; init; }
+        public Keymap Keymap { get; init; }
 
         private string _Block;
         public string Block

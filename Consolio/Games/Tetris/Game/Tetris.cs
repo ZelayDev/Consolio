@@ -10,6 +10,8 @@ namespace Consolio.Tetris
 
         private readonly IBlockRandomizer BlockRandomizer;
 
+        public readonly Observable<bool> Paused = new();
+        
         public readonly Observable<int> Score = new();
         public readonly Observable<int> Lines = new();
         public readonly Observable<int> Level = new();
@@ -17,7 +19,7 @@ namespace Consolio.Tetris
         public readonly Observable<PlacedBlock> CurrentBlock = new();
         public readonly Observable<PlacedBlock> Shadow       = new();
         public readonly Queue<Block>            NextBlocks;
-
+        
         private readonly int[] PlacedBlocks = new int[7];
 
         public event Action<int, int>?     OnBlockPlaced;
@@ -28,14 +30,12 @@ namespace Consolio.Tetris
         private CancellationTokenSource? GameLoopCancellationToken;
 
         private int Delay;
-
-        private bool Paused;
         #endregion
 
         #region Properties
         public override string Name => "TETRIS";
         #endregion
-        
+
         #region Constructors
         public Tetris()
         {
@@ -44,7 +44,7 @@ namespace Consolio.Tetris
             Visualizer = new Visualizer(this, Field, Config);
 
             BlockRandomizer = GetRandomizer(Config.RandomizerKind, Config.ColorCount);
-            
+
             ExecutableQueue    = new ExecutableQueue(Config.InputBuffer);
             StartBlockPosition = GetStartBlockPosition(Config.FieldSize);
 
@@ -97,7 +97,7 @@ namespace Consolio.Tetris
         }
         #endregion
 
-        #region PrivateMethods
+        #region Loops
         private async Task GameLoop(CancellationToken Token)
         {
             try
@@ -105,7 +105,10 @@ namespace Consolio.Tetris
                 while (!Token.IsCancellationRequested)
                 {
                     await Task.Delay(Delay, Token);
-                    ExecutableQueue.AddPriority(Lower);
+                    if (!Paused.Value)
+                    {
+                        ExecutableQueue.AddPriority(Lower);
+                    }
                 }
             }
             catch (OperationCanceledException) { }
@@ -132,35 +135,54 @@ namespace Consolio.Tetris
             }
         }
 
+        
         private bool HandleKey(ConsoleKey Key)
         {
-            switch (Key)
+            if (Paused.Value)
             {
-                case ConsoleKey.A:
-                    MoveLeft();
-                    break;
+                switch (Config.Keymap.GetPauseAction(Key))
+                {
+                    case TetrisPauseAction.Resume:
+                        Resume();
+                        break;
+                    
+                    case TetrisPauseAction.Exit:
+                        return true;
+                }
+            }
+            else
+            {
+                    switch (Config.Keymap.GetAction(Key))
+                    {
+                        case TetrisAction.MoveLeft:
+                            MoveLeft();
+                            break;
 
-                case ConsoleKey.D:
-                    MoveRight();
-                    break;
+                        case TetrisAction.MoveRight:
+                            MoveRight();
+                            break;
 
-                case ConsoleKey.Q:
-                    RotateLeft();
-                    break;
+                        case TetrisAction.RotateLeft:
+                            RotateLeft();
+                            break;
 
-                case ConsoleKey.E:
-                    RotateRight();
-                    break;
+                        case TetrisAction.RotateRight:
+                            RotateRight();
+                            break;
 
-                case ConsoleKey.Spacebar:
-                    HardDrop();
-                    break;
+                        case TetrisAction.HardDrop:
+                            HardDrop();
+                            break;
+
+                        case TetrisAction.Pause:
+                            Pause();
+                            break;
+                    }
             }
 
             return false;
         }
-
-
+        
         private void Lower()
         {
             var Block       = CurrentBlock.Value;
@@ -176,8 +198,9 @@ namespace Consolio.Tetris
                 CurrentBlock.Value = new PlacedBlock(NewPosition, Block.Block);
             }
         }
+        #endregion
 
-
+        #region Movement
         private void MoveLeft()
         {
             Move(-1);
@@ -207,8 +230,7 @@ namespace Consolio.Tetris
                 CurrentBlock.Value = new PlacedBlock(Block.Position, Rotated);
             }
         }
-
-
+        
         private void HardDrop()
         {
             var Block = CurrentBlock.Value;
@@ -217,46 +239,43 @@ namespace Consolio.Tetris
             {
                 return;
             }
-            
+
             var Final = new PlacedBlock(Shadow.Value.Position, Block.Block);
             CurrentBlock.Value = Final;
             PlaceBlock(Final);
         }
-
-
-        private void Move(int Offset)
+        #endregion
+        
+        #region Pause
+        private void Pause()
         {
-            var Block       = CurrentBlock.Value;
-            var NewPosition = Block.Position;
-            NewPosition.X += Offset;
-
-            if (!Field.Overlaps(NewPosition, Block.Block))
+            if (Paused.Value)
             {
-                CurrentBlock.Value = new PlacedBlock(NewPosition, Block.Block);
+                return;
             }
+
+            Paused.Value = true;
         }
 
-        private void ChangeBlock()
+        private void Resume()
         {
-            var NextBlock = NextBlocks.Dequeue();
-            NextBlocks.Enqueue(BlockRandomizer.Next());
-            CurrentBlock.Value = new PlacedBlock(StartBlockPosition, NextBlock);
-            NextBlocksChanged?.Invoke(NextBlocks);
+            if (!Paused.Value)
+            {
+                return;
+            }
+
+            Task.Run
+            (
+                async () =>
+                {
+                    await Task.Delay(300);
+                    Paused.Value = false;
+                }
+            );
         }
-
-        private void PlaceBlock(PlacedBlock Block)
-        {
-            Field.Add(Block.Position, Block.Block);
-            RemoveFullLines(Block.Position, Block.Block);
-            ChangeBlock();
-
-            var BlockIndex = Block.Block.Index >> 4;
-            var Count      = PlacedBlocks[BlockIndex] + 1;
-            PlacedBlocks[BlockIndex] = Count;
-            OnBlockPlaced?.Invoke(BlockIndex, Count);
-        }
-
-
+        #endregion
+        
+        #region Update
         private void UpdateLevel(int OldLines, int NewLines)
         {
             var Current = Level.Value;
@@ -286,8 +305,9 @@ namespace Consolio.Tetris
                 Shadow.Value = new PlacedBlock(GetShadowPosition(New), new Block(New.Block.Index, 1, New.Block.Id));
             }
         }
+        #endregion
 
-
+        #region LineClearing
         private void RemoveFullLines(Vector2Int BlockPosition, Block Block)
         {
             var Cleared = Block.EnumerateUniqueYs(BlockPosition)
@@ -344,8 +364,42 @@ namespace Consolio.Tetris
                 Field.ClearRow(Y);
             }
         }
+        #endregion
+        
+        #region HelpMethods
+        private void Move(int Offset)
+        {
+            var Block       = CurrentBlock.Value;
+            var NewPosition = Block.Position;
+            NewPosition.X += Offset;
 
+            if (!Field.Overlaps(NewPosition, Block.Block))
+            {
+                CurrentBlock.Value = new PlacedBlock(NewPosition, Block.Block);
+            }
+        }
 
+        private void ChangeBlock()
+        {
+            var NextBlock = NextBlocks.Dequeue();
+            NextBlocks.Enqueue(BlockRandomizer.Next());
+            CurrentBlock.Value = new PlacedBlock(StartBlockPosition, NextBlock);
+            NextBlocksChanged?.Invoke(NextBlocks);
+        }
+
+        private void PlaceBlock(PlacedBlock Block)
+        {
+            Field.Add(Block.Position, Block.Block);
+            RemoveFullLines(Block.Position, Block.Block);
+            ChangeBlock();
+
+            var BlockIndex = Block.Block.Index >> 4;
+            var Count      = PlacedBlocks[BlockIndex] + 1;
+            PlacedBlocks[BlockIndex] = Count;
+            OnBlockPlaced?.Invoke(BlockIndex, Count);
+        }
+        
+        
         private Vector2Int GetShadowPosition(PlacedBlock Block)
         {
             var Field    = this.Field;
@@ -371,8 +425,7 @@ namespace Consolio.Tetris
                 Queue.Enqueue(Randomizer.Next());
             }
         }
-
-
+        
         private static Vector2Int GetStartBlockPosition(Vector2Int FieldSize)
         {
             return new Vector2Int((FieldSize.X >> 1) - 1, FieldSize.Y + 2);
@@ -383,7 +436,7 @@ namespace Consolio.Tetris
             return Kind switch
             {
                 RandomizerKind.Bag => new BagRandomizer(ColorCount),
-                _ => new BlockRandomizer(ColorCount)
+                _                  => new BlockRandomizer(ColorCount)
             };
         }
         #endregion
