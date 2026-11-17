@@ -13,14 +13,21 @@ namespace Consolio.Tetris
         private readonly string   BorderChars;
         private readonly string[] Palette;
 
+        private readonly string BlockView;
+        private readonly string EmptyView;
+
 
         public Visualizer(Tetris Tetris, Field Field, Config Config)
         {
             this.Tetris = Tetris;
             this.Field  = Field;
             this.Config = Config;
-            Anchors     = new Anchors(Config);
 
+            BlockView = Config.Block;
+            EmptyView = Config.Empty;
+            
+            Anchors     = new Anchors(Config);
+            
             BorderChars = GetBorderChars(Config.Theme.BorderStyle.Style);
             Palette     = Array.ConvertAll(this.Config.Theme.Colors, static Color => $"\x1b[38;2;{Color.R};{Color.G};{Color.B}m");
         }
@@ -58,12 +65,13 @@ namespace Consolio.Tetris
             var Palette = this.Palette;
             var Config  = this.Config;
             var Anchors = this.Anchors;
+            
+            var BlockView = this.BlockView;
+            var EmptyView = this.EmptyView;
 
             var Size  = Field.Size;
             var Start = Anchors.FieldContent;
 
-            var BlockView = Config.Block;
-            var EmptyView = Config.Empty;
 
             var CursorX = $"\x1b[{Start.X + 1}G";
             var Builder = new StringBuilder(512);
@@ -290,12 +298,12 @@ namespace Consolio.Tetris
 
         private void RemoveBlock(PlacedBlock Block)
         {
-            DrawBlock(Block, Config.Empty, Palette[0]);
+            DrawBlock(Block, EmptyView, Palette[0]);
         }
 
         private void DrawBlock(PlacedBlock Block)
         {
-            DrawBlock(Block, Config.Block, Palette[Block.Block.Color]);
+            DrawBlock(Block, BlockView, Palette[Block.Block.Color]);
         }
 
         private void DrawBlock(PlacedBlock Block, string View, string Color)
@@ -323,7 +331,7 @@ namespace Consolio.Tetris
         {
             var Anchors     = this.Anchors;
             var Size        = Field.Size;
-            var BlockLength = Config.Block.Length;
+            var BlockLength = BlockView.Length;
 
             var X = Anchors.FieldContent.X + Cell.X * BlockLength;
             var Y = Anchors.FieldContent.Y + (Size.Y - 1 - Cell.Y);

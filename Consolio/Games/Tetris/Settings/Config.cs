@@ -13,76 +13,59 @@ namespace Consolio.Tetris
                 MinDelay   = 100
             },
 
-            Theme = new Theme
-            {
-                Colors =
-                [
-                    new RGBColor(20, 20, 20),
-                    new RGBColor(65, 65, 65),
-                    new RGBColor(0, 240, 240),
-                    new RGBColor(240, 240, 0),
-                    new RGBColor(160, 0, 240),
-                    new RGBColor(0, 240, 0),
-                    new RGBColor(240, 0, 0),
-                    new RGBColor(0, 0, 240),
-                    new RGBColor(240, 160, 0)
-                ],
-                IndicatorColor = new RGBColor(200, 200, 200),
-                ScoreColor     = new RGBColor(250, 80, 3),
-                LinesColor     = new RGBColor(250, 230, 3),
-                LevelColor     = new RGBColor(110, 250, 3),
-
-                BorderStyle = new BorderStyle
-                {
-                    Style = BorderLine.DoubleLine,
-                    Color = new RGBColor(22, 148, 139)
-                },
-                Header = new ColorText
-                {
-                    Text  = "===TETRIS===",
-                    Color = new RGBColor(211, 235, 33)
-                },
-
-                Blocks =
-                [
-                    "██  ",
-                    "▄█▄ ",
-                    "▄▄█ ",
-                    "█▄▄ ",
-                    "▄█▀ ",
-                    "▀█▄ ",
-                    "▄▄▄▄"
-
-                    //"⣿⣿  "
-                    //"⣤⣿⣤ "
-                    //"⣤⣤⣿ "
-                    //"⣿⣤⣤ "
-                    //"⣤⣿⠛ "
-                    //"⠛⣿⣤ "
-                    //"⣤⣤⣤⣤"
-                ]
-            },
-
+            Theme = Theme.Default,
+            
             Block       = "[]",
             Empty       = "[]",
             InputBuffer = 5,
             BlockQueue  = 3
         };
 
-
         public Vector2Int FieldSize { get; init; }
         public Delay      Delay     { get; init; }
 
         public Theme Theme { get; init; }
 
-        public string Block       { get; init; }
-        public string Empty       { get; init; }
-        
-        public int    InputBuffer { get; init; }
-        public int    BlockQueue  { get; init; } //Max 15
+        private string _Block;
+        public string Block
+        {
+            get => _Block;
+            init => _Block = value;
+        }
+
+        private string _Empty;
+        public string Empty
+        {
+            get => _Empty;
+            init => _Empty = value;
+        }
+
+        public int InputBuffer
+        {
+            get;
+            init => field = Math.Max(1, value);
+        }
+
+        public int BlockQueue
+        {
+            get;
+            init => field = Math.Clamp(value, 1, 15);
+        }
         
         public RandomizerKind RandomizerKind { get; init; }
 
         public int ColorCount => Theme.Colors.Length;
+
+
+        public Config Correct()
+        {
+            if (_Block.Length != _Empty.Length)
+            {
+                _Block = Default._Block;
+                _Empty = Default._Empty;
+            }
+            
+            return this;
+        }
     }
 }

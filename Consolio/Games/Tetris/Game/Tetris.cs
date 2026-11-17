@@ -1,6 +1,6 @@
 namespace Consolio.Tetris
 {
-    public sealed class Tetris
+    public sealed class Tetris : Game
     {
         #region Data
         private readonly Config          Config;
@@ -32,10 +32,14 @@ namespace Consolio.Tetris
         private bool Paused;
         #endregion
 
+        #region Properties
+        public override string Name => "TETRIS";
+        #endregion
+        
         #region Constructors
         public Tetris()
         {
-            Config     = LoadConfiguration();
+            Config     = LoadConfig<Config>()?.Correct() ?? Config.Default;
             Field      = new Field(Config.FieldSize);
             Visualizer = new Visualizer(this, Field, Config);
 
@@ -53,7 +57,7 @@ namespace Consolio.Tetris
         #endregion
 
         #region PublicMethods
-        public async Task Run()
+        public override async Task Run()
         {
             Console.Write("\x1b[?1049h");
             Console.CursorVisible = false;
@@ -208,6 +212,12 @@ namespace Consolio.Tetris
         private void HardDrop()
         {
             var Block = CurrentBlock.Value;
+
+            if (StartBlockPosition.Y - Block.Position.Y < 3)
+            {
+                return;
+            }
+            
             var Final = new PlacedBlock(Shadow.Value.Position, Block.Block);
             CurrentBlock.Value = Final;
             PlaceBlock(Final);
@@ -366,11 +376,6 @@ namespace Consolio.Tetris
         private static Vector2Int GetStartBlockPosition(Vector2Int FieldSize)
         {
             return new Vector2Int((FieldSize.X >> 1) - 1, FieldSize.Y + 2);
-        }
-
-        private static Config LoadConfiguration()
-        {
-            return Config.Default; //TODO
         }
 
         private static IBlockRandomizer GetRandomizer(RandomizerKind Kind, int ColorCount)
