@@ -143,7 +143,7 @@ namespace Consolio.Tetris
                 switch (Config.Keymap.GetPauseAction(Key))
                 {
                     case TetrisPauseAction.Resume:
-                        Resume();
+                        ExecutableQueue.Add(Resume);
                         break;
                     
                     case TetrisPauseAction.Exit:
@@ -155,27 +155,27 @@ namespace Consolio.Tetris
                     switch (Config.Keymap.GetAction(Key))
                     {
                         case TetrisAction.MoveLeft:
-                            MoveLeft();
+                            ExecutableQueue.Add(MoveLeft);
                             break;
 
                         case TetrisAction.MoveRight:
-                            MoveRight();
+                            ExecutableQueue.Add(MoveRight);
                             break;
 
                         case TetrisAction.RotateLeft:
-                            RotateLeft();
+                            ExecutableQueue.Add(RotateLeft);
                             break;
 
                         case TetrisAction.RotateRight:
-                            RotateRight();
+                            ExecutableQueue.Add(RotateRight);
                             break;
 
                         case TetrisAction.HardDrop:
-                            HardDrop();
+                            ExecutableQueue.Add(HardDrop);
                             break;
 
                         case TetrisAction.Pause:
-                            Pause();
+                            ExecutableQueue.Add(Pause);
                             break;
                     }
             }
@@ -235,7 +235,7 @@ namespace Consolio.Tetris
         {
             var Block = CurrentBlock.Value;
 
-            if (StartBlockPosition.Y - Block.Position.Y < 3)
+            if (StartBlockPosition.Y - Block.Position.Y < 2)
             {
                 return;
             }

@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace Consolio.Tetris
@@ -268,7 +267,7 @@ namespace Consolio.Tetris
             var Keymap  = Config.Keymap;
             var Builder = new StringBuilder(256);
             
-            var CursorX         = Anchors.KeymapPosition.X + 1;
+            var CursorX         = Anchors.KeymapPosition.X;
             var IconColor       = Config.Theme.KeymapIcons;
             var BindsColor      = Config.Theme.KeymapBinds;
             var LeaderDotsColor = Config.Theme.LeaderDots;

@@ -51,7 +51,7 @@ namespace Consolio.Tetris
         public int BlockQueue
         {
             get;
-            init => field = Math.Clamp(value, 1, 15);
+            init => field = Math.Clamp(value, 1, 30);
         }
         
         public RandomizerKind RandomizerKind { get; init; }

@@ -6,10 +6,10 @@ namespace Consolio.Tetris
     {
         public static readonly Keymap Default = new()
         {
-            MoveLeft    = [A, LeftArrow],
-            MoveRight   = [D, RightArrow],
+            MoveLeft    = [LeftArrow, A],
+            MoveRight   = [RightArrow, D],
             RotateLeft  = [Q],
-            RotateRight = [E, UpArrow],
+            RotateRight = [UpArrow, E],
             HardDrop    = [Spacebar],
             Pause       = [Escape],
             Resume      = [Enter],

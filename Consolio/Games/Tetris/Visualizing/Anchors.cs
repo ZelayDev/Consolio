@@ -74,10 +74,10 @@ namespace Consolio.Tetris
             KeymapPosition         = new Vector2Int(NextBlockPosition.X, NextBlockPosition.Y + NextBlockSize.Y);
             BlockStatisticPosition = new Vector2Int(StatisticPosition.X, StatisticPosition.Y + 5);
 
-            HeaderContent         = HeaderPosition + Vector2Int.Up;
+            HeaderContent         = HeaderPosition + Vector2Int.OneOne;
             FieldContent          = FieldPosition + Vector2Int.Up;
             NextBlockContent      = NextBlockPosition + Vector2Int.Up;
-            KeymapContent         = KeymapPosition + Vector2Int.Up;
+            KeymapContent         = KeymapPosition + Vector2Int.OneOne;
             BlockStatisticContent = BlockStatisticPosition + Vector2Int.OneOne;
 
             var StatisticX = StatisticPosition.X + 7;
