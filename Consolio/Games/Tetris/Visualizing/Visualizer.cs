@@ -126,7 +126,7 @@ namespace Consolio.Tetris
             UpdateBlock(Tetris.CurrentBlock);
             UpdateBlock(Tetris.Shadow);
         }
-        
+
         private void UpdateBlock(Observable<PlacedBlock> Block)
         {
             var Value = Block.Value;
@@ -144,6 +144,46 @@ namespace Consolio.Tetris
 
         private void UpdateNextBlocks(Queue<Block> Queue)
         {
+            var Builder = new StringBuilder(128);
+
+            var Start = Anchors.NextBlocksContent;
+            var Size  = Anchors.NextBlocks;
+
+            var Total  = Size.X * Size.Y;
+            var Filled = Math.Min(Queue.Count, Total);
+
+            var Colors = Palette;
+            var Blocks = Config.Theme.Blocks;
+
+            if (Filled == 0)
+            {
+                return;
+            }
+
+            var Index = 0;
+
+            foreach (var Block in Queue)
+            {
+                if (Index >= Total)
+                {
+                    break;
+                }
+
+                var X = Start.X + Index / Size.Y * 6;
+                var Y = Start.Y + Index % Size.Y * 2;
+
+                var Color = Colors[Block.Color % Colors.Length];
+                var View  = Blocks[Block.Index >> 4];
+
+                Builder.SetCursorPosition(X, Y)
+                       .Append(Color)
+                       .Append(View);
+
+                Index++;
+            }
+
+            Builder.ResetColor();
+            Console.Out.Write(Builder);
         }
 
 
@@ -190,7 +230,7 @@ namespace Consolio.Tetris
             const string Text = "PAUSE";
 
             var Builder = new StringBuilder(256);
-            
+
             var Border  = Config.Theme.BorderStyle;
             var Palette = Border.Palette;
 
@@ -202,7 +242,7 @@ namespace Consolio.Tetris
 
             var StartX = X + 1;
             var EndX   = X + FieldSize.X - 1;
-            
+
             var Inner = FieldSize.X - 2;
             var TextX = X + 1 + ((Inner - Text.Length) >> 1);
 
@@ -227,13 +267,13 @@ namespace Consolio.Tetris
                        .NextLine(X);
 
                 DrawLine();
-                
+
                 Builder.ResetColor();
                 Console.Out.Write(Builder);
             }
             else
             {
-                var StartLine = FieldSize.Y - 1 - (Y - FieldPosition.Y - 1) - 2;
+                var StartLine = FieldSize.Y + FieldPosition.Y - Y - 2;
                 var LastColor = -1;
 
                 var Field      = this.Field;
@@ -273,7 +313,7 @@ namespace Consolio.Tetris
 
                 Builder.Append("\n\n").SetCursorX(X);
                 RedrawBorder();
-                
+
                 Builder.SetCursorPosition(X + 1, Y);
                 DrawLine(StartLine);
 
@@ -282,11 +322,11 @@ namespace Consolio.Tetris
 
                 Builder.NextLine(StartX);
                 DrawLine(StartLine - 2);
-                
+
                 Builder.ResetColor();
                 Console.Out.Write(Builder);
-                
-                UpdateBlocks();//Optimize
+
+                UpdateBlocks(); //Optimize
             }
         }
 
@@ -312,8 +352,9 @@ namespace Consolio.Tetris
             UIHelper.DrawBorder(Anchors.BlockStatisticPosition, Anchors.BlockStatisticSize, BorderStyle);
             DrawBlockStatisticUI();
 
-            //NextBlock
+            //NextBlocks
             UIHelper.DrawBorder(Anchors.NextBlocksPosition, Anchors.NextBlocksSize, BorderStyle);
+            DrawNextBlocksUI();
 
             //Keymap
             UIHelper.DrawBorder(Anchors.KeymapPosition, Anchors.KeymapSize, BorderStyle);
@@ -393,6 +434,36 @@ namespace Consolio.Tetris
             Builder.ResetColor();
 
             Console.Out.Write(Builder);
+        }
+
+        private void DrawNextBlocksUI()
+        {
+            var Builder = new StringBuilder(256);
+
+            var Anchors     = this.Anchors;
+            var Placeholder = Config.Theme.QueuePlaceHolder;
+
+            var Size    = Anchors.NextBlocks;
+            var Total   = Size.X * Size.Y;
+            var Filled  = Math.Min(Tetris.NextBlocks.Count, Total);
+
+            var Start    = Anchors.NextBlocksContent;
+
+            Builder.SetColor(Placeholder.Color);
+
+            for (var Index = Filled; Index < Total; Index++)
+            {
+                var X = Start.X + Index / Size.Y * 6;
+                var Y = Start.Y + Index % Size.Y * 2;
+
+                Builder.SetCursorPosition(X, Y)
+                       .Append(Placeholder.Text);
+            }
+
+            Builder.ResetColor();
+            Console.Out.Write(Builder);
+
+            UpdateNextBlocks(Tetris.NextBlocks);
         }
 
         private void DrawKeymap()

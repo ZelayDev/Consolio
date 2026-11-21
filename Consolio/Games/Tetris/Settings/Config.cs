@@ -17,9 +17,9 @@ namespace Consolio.Tetris
             Block       = "[]",
             Empty       = "[]",
             InputBuffer = 5,
-            BlockQueue  = 3,
+            BlockQueue  = 15,
             
-            RandomizerKind = RandomizerKind.Base,
+            RandomizerKind = RandomizerKind.Bag,
 
             Theme = Theme.Default,
             Keymap = Keymap.Default
@@ -56,7 +56,7 @@ namespace Consolio.Tetris
         public int BlockQueue
         {
             get;
-            init => field = Math.Clamp(value, 1, 30);
+            init => field = Math.Clamp(value, 1, 15);
         }
 
         public Theme  Theme  { get; init; } = Theme.Default;
