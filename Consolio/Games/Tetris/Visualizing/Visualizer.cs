@@ -227,10 +227,13 @@ namespace Consolio.Tetris
                        .NextLine(X);
 
                 DrawLine();
+                
+                Builder.ResetColor();
+                Console.Out.Write(Builder);
             }
             else
             {
-                var StartLine = FieldSize.Y - 1 - (Y - FieldPosition.Y - 1);
+                var StartLine = FieldSize.Y - 1 - (Y - FieldPosition.Y - 1) - 2;
                 var LastColor = -1;
 
                 var Field      = this.Field;
@@ -280,11 +283,11 @@ namespace Consolio.Tetris
                 Builder.NextLine(StartX);
                 DrawLine(StartLine - 2);
                 
-                //TODO: Draw Block & Shadow
+                Builder.ResetColor();
+                Console.Out.Write(Builder);
+                
+                UpdateBlocks();//Optimize
             }
-
-            Builder.ResetColor();
-            Console.Out.Write(Builder);
         }
 
 
@@ -462,9 +465,9 @@ namespace Consolio.Tetris
 
         private void DrawBlock(PlacedBlock Block, string View, string Color)
         {
-            var Anchors = this.Anchors;
             var Builder = new StringBuilder(64);
 
+            var Start       = Anchors.FieldContent;
             var Size        = Field.Size;
             var BlockLength = BlockView.Length;
 
@@ -474,8 +477,8 @@ namespace Consolio.Tetris
             {
                 if (Cell.Y < Size.Y)
                 {
-                    var X = Anchors.FieldContent.X + Cell.X * BlockLength;
-                    var Y = Anchors.FieldContent.Y + (Size.Y - 1 - Cell.Y);
+                    var X = Start.X + Cell.X * BlockLength;
+                    var Y = Start.Y + (Size.Y - 1 - Cell.Y);
 
                     Builder.SetCursorPosition(X, Y);
                     Builder.Append(View);
