@@ -34,6 +34,8 @@ namespace Consolio.Tetris
 
         #region Properties
         public override string Name => "TETRIS";
+
+        public ReadOnlySpan<int> BlockStatistic => PlacedBlocks;
         #endregion
 
         #region Constructors
@@ -43,7 +45,7 @@ namespace Consolio.Tetris
             Field      = new Field(Config.FieldSize);
             Visualizer = new Visualizer(this, Field, Config);
 
-            BlockRandomizer = GetRandomizer(Config.RandomizerKind, Config.ColorCount);
+            BlockRandomizer = GetRandomizer(Config.RandomizerKind, Config.Theme.Colors.Length);
 
             ExecutableQueue    = new ExecutableQueue(Config.InputBuffer);
             StartBlockPosition = GetStartBlockPosition(Config.FieldSize);
@@ -152,32 +154,32 @@ namespace Consolio.Tetris
             }
             else
             {
-                    switch (Config.Keymap.GetAction(Key))
-                    {
-                        case TetrisAction.MoveLeft:
-                            ExecutableQueue.Add(MoveLeft);
-                            break;
+                switch (Config.Keymap.GetAction(Key))
+                {
+                    case TetrisAction.MoveLeft:
+                        ExecutableQueue.Add(MoveLeft);
+                        break;
 
-                        case TetrisAction.MoveRight:
-                            ExecutableQueue.Add(MoveRight);
-                            break;
+                    case TetrisAction.MoveRight:
+                        ExecutableQueue.Add(MoveRight);
+                        break;
 
-                        case TetrisAction.RotateLeft:
-                            ExecutableQueue.Add(RotateLeft);
-                            break;
+                    case TetrisAction.RotateLeft:
+                        ExecutableQueue.Add(RotateLeft);
+                        break;
 
-                        case TetrisAction.RotateRight:
-                            ExecutableQueue.Add(RotateRight);
-                            break;
+                    case TetrisAction.RotateRight:
+                        ExecutableQueue.Add(RotateRight);
+                        break;
 
-                        case TetrisAction.HardDrop:
-                            ExecutableQueue.Add(HardDrop);
-                            break;
+                    case TetrisAction.HardDrop:
+                        ExecutableQueue.Add(HardDrop);
+                        break;
 
-                        case TetrisAction.Pause:
-                            ExecutableQueue.Add(Pause);
-                            break;
-                    }
+                    case TetrisAction.Pause:
+                        ExecutableQueue.Add(Pause);
+                        break;
+                }
             }
 
             return false;

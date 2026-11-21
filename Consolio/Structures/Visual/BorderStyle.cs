@@ -1,8 +1,20 @@
+using System.Text.Json.Serialization;
+
 namespace Consolio
 {
     public readonly struct BorderStyle
     {
-        public BorderLine Style { get; init; }
+        [JsonIgnore]public string Palette { get; private init; }
+
         public RGBColor   Color { get; init; }
+        public BorderLine Style
+        {
+            get;
+            init
+            {
+                field = value;
+                Palette = UIHelper.GetBorderPalette(value);
+            }
+        }
     }
 }

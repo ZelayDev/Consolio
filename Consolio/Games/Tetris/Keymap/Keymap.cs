@@ -22,51 +22,51 @@ namespace Consolio.Tetris
 
         public ConsoleKey[] MoveLeft
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisAction.MoveLeft, value);
-        }
+        } = [];
 
         public ConsoleKey[] MoveRight
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisAction.MoveRight, value);
-        }
+        } = [];
 
         public ConsoleKey[] RotateLeft
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisAction.RotateLeft, value);
-        }
+        } = [];
 
         public ConsoleKey[] RotateRight
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisAction.RotateRight, value);
-        }
+        } = [];
 
         public ConsoleKey[] HardDrop
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisAction.HardDrop, value);
-        }
+        } = [];
 
         public ConsoleKey[] Pause
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisAction.Pause, value);
-        }
+        } = [];
 
         public ConsoleKey[] Resume
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisPauseAction.Resume, value);
-        }
+        } = [];
 
         public ConsoleKey[] Exit
         {
-            get => field ?? [];
+            get;
             init => field = BindConsoleKeys(TetrisPauseAction.Exit, value);
-        }
+        } = [];
 
 
         private ConsoleKey[] BindConsoleKeys(TetrisAction Action, ConsoleKey[] ConsoleKeys)

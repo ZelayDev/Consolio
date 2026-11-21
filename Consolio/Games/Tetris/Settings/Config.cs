@@ -12,30 +12,34 @@ namespace Consolio.Tetris
                 StartDelay = 350,
                 MinDelay   = 100
             },
-
-            Theme = Theme.Default,
-            Keymap = Keymap.Default,
             
             Block       = "[]",
             Empty       = "[]",
             InputBuffer = 5,
-            BlockQueue  = 3
+            BlockQueue  = 3,
+            
+            RandomizerKind = RandomizerKind.Base,
+
+            Theme = Theme.Default,
+            Keymap = Keymap.Default
         };
 
+        
+        private string _Block = "[]";
+        private string _Empty = "[]";
+
+        
         public Vector2Int FieldSize { get; init; }
         public Delay      Delay     { get; init; }
-
-        public Theme  Theme  { get; init; }
-        public Keymap Keymap { get; init; }
-
-        private string _Block;
+        
+        public RandomizerKind RandomizerKind { get; init; }
+        
         public string Block
         {
             get => _Block;
             init => _Block = value;
         }
 
-        private string _Empty;
         public string Empty
         {
             get => _Empty;
@@ -53,12 +57,11 @@ namespace Consolio.Tetris
             get;
             init => field = Math.Clamp(value, 1, 30);
         }
+
+        public Theme  Theme  { get; init; } = Theme.Default;
+        public Keymap Keymap { get; init; } = Keymap.Default;
         
-        public RandomizerKind RandomizerKind { get; init; }
-
-        public int ColorCount => Theme.Colors.Length;
-
-
+        
         public Config Correct()
         {
             if (_Block.Length != _Empty.Length)
