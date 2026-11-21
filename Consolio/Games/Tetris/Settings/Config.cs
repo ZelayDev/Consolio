@@ -10,7 +10,8 @@ namespace Consolio.Tetris
             Delay = new Delay
             {
                 StartDelay = 350,
-                MinDelay   = 100
+                MinDelay   = 100,
+                ResumeDelay = 200
             },
             
             Block       = "[]",

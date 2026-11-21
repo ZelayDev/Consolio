@@ -5,10 +5,12 @@ namespace Consolio.Tetris
         private readonly int HeaderLength;
         private readonly int BlockLength;
 
+        public readonly int NextBlocksLimit;
+
         public readonly Vector2Int HeaderSize;
         public readonly Vector2Int FieldSize;
         public readonly Vector2Int StatisticSize;
-        public readonly Vector2Int NextBlockSize;
+        public readonly Vector2Int NextBlocksSize;
         public readonly Vector2Int KeymapSize;
         public readonly Vector2Int BlockStatisticSize;
 
@@ -38,9 +40,11 @@ namespace Consolio.Tetris
             HeaderSize = new Vector2Int(HeaderLength + 2, 3);
             FieldSize = new Vector2Int(BlockLength * Config.FieldSize.X + 2, Config.FieldSize.Y + 2);
             StatisticSize = new Vector2Int(19, 5);
-            NextBlockSize = new Vector2Int(19, 12);
+            NextBlocksSize = new Vector2Int(19, 12);
             KeymapSize = new Vector2Int(19, 10);
             BlockStatisticSize = new Vector2Int(19, 17);
+
+            NextBlocksLimit = (NextBlocksSize.X - 2) / 6 * (NextBlocksSize.Y - 2);
         }
 
 
@@ -69,7 +73,7 @@ namespace Consolio.Tetris
             FieldPosition = new Vector2Int(Center - FieldSize.X / 2 + 1, 3);
             StatisticPosition = new Vector2Int(FieldPosition.X - StatisticSize.X, FieldPosition.Y);
             NextBlocksPosition = new Vector2Int(FieldPosition.X + FieldSize.X, FieldPosition.Y);
-            KeymapPosition = new Vector2Int(NextBlocksPosition.X, NextBlocksPosition.Y + NextBlockSize.Y);
+            KeymapPosition = new Vector2Int(NextBlocksPosition.X, NextBlocksPosition.Y + NextBlocksSize.Y);
             BlockStatisticPosition = new Vector2Int(StatisticPosition.X, StatisticPosition.Y + 5);
         }
     }

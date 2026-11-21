@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Consolio
 {
     public sealed class Observable<T>

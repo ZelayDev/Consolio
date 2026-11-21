@@ -13,10 +13,8 @@ namespace Consolio
         {
             return Style switch
             {
-                BorderLine.SingleLine => "─│┌┐└┘",
-                BorderLine.DoubleLine => "═║╔╗╚╝",
-                BorderLine.DottedLine => "┅┋┏┓┗┛",
-                _                     => "─│┌┐└┘"
+                BorderLine.DoubleLine => "═║╔╗╚╝╠╣",
+                _ => "─│┌┐└┘├┤"
             };
         }
     }

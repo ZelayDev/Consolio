@@ -266,14 +266,23 @@ namespace Consolio.Tetris
                 return;
             }
 
-            Task.Run
-            (
-                async () =>
-                {
-                    await Task.Delay(300);
-                    Paused.Value = false;
-                }
-            );
+            var Delay = Config.Delay.ResumeDelay;
+
+            if (Delay <= 0)
+            {
+                Paused.Value = false;
+            }
+            else
+            {
+                Task.Run
+                (
+                    async () =>
+                    {
+                        await Task.Delay(Delay);
+                        Paused.Value = false;
+                    }
+                );
+            }
         }
         #endregion
         
