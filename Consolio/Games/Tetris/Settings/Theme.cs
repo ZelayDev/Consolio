@@ -4,19 +4,6 @@ namespace Consolio.Tetris
     {
         public static readonly Theme Default = new()
         {
-            Colors =
-            [
-                new RGBColor(20, 20, 20),
-                new RGBColor(65, 65, 65),
-                new RGBColor(0, 240, 240),
-                new RGBColor(240, 240, 0),
-                new RGBColor(160, 0, 240),
-                new RGBColor(0, 240, 0),
-                new RGBColor(240, 0, 0),
-                new RGBColor(0, 0, 240),
-                new RGBColor(240, 160, 0)
-            ],
-
             IndicatorColor = new RGBColor(200, 200, 200),
             LeaderDots = new RGBColor(150, 150, 150),
 
@@ -31,16 +18,6 @@ namespace Consolio.Tetris
             {
                 Style = BorderLine.DoubleLine,
                 Color = new RGBColor(22, 148, 139)
-            },
-            Header = new ColorText
-            {
-                Text = "===TETRIS===",
-                Color = new RGBColor(211, 235, 33)
-            },
-            QueuePlaceHolder = new ColorText
-            {
-                Text = "~~~~",
-                Color = new RGBColor(205, 247, 66)
             },
 
             Blocks =
@@ -62,7 +39,18 @@ namespace Consolio.Tetris
             init => field = value.Length < 3
                 ? Default.Colors
                 : value;
-        } = Default.Colors;
+        } =
+        [
+            new(20, 20, 20),
+            new(65, 65, 65),
+            new(0, 240, 240),
+            new(240, 240, 0),
+            new(160, 0, 240),
+            new(0, 240, 0),
+            new(240, 0, 0),
+            new(0, 0, 240),
+            new(240, 160, 0)
+        ];
 
         public RGBColor IndicatorColor { get; init; }
         public RGBColor LeaderDots     { get; init; }
@@ -75,7 +63,7 @@ namespace Consolio.Tetris
         public RGBColor KeymapBinds { get; init; }
 
         public BorderStyle BorderStyle { get; init; }
-        public ColorText   Header      { get; init; } = Default.Header;
+        public ColorText   Header      { get; init; } = new("===TETRIS===", new RGBColor(211, 235, 33));
 
         public ColorText QueuePlaceHolder
         {
@@ -87,7 +75,7 @@ namespace Consolio.Tetris
                     field = value;
                 }
             }
-        } = Default.QueuePlaceHolder;
+        } = new("~~~~", new RGBColor(205, 247, 66));
 
         public string[] Blocks
         {
