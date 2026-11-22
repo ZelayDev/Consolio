@@ -105,6 +105,11 @@ namespace Consolio.Tetris
             Console.Out.Write(Builder);
         }
 
+        public void ShowGameOver()
+        {
+            DrawOverlay("GAME OVER");
+        }
+        
 
         private void Update<T>(T A, T B)
         {
@@ -227,8 +232,19 @@ namespace Consolio.Tetris
 
         private void UpdatePaused(bool Old, bool New)
         {
-            const string Text = "PAUSE";
+            if (New)
+            {
+                DrawOverlay("PAUSE");
+            }
+            else
+            {
+                HideOverlay();
+            }
+        }
 
+
+        private void DrawOverlay(string Text)
+        {
             var Builder = new StringBuilder(256);
 
             var Border  = Config.Theme.BorderStyle;
@@ -248,86 +264,98 @@ namespace Consolio.Tetris
 
             Builder.SetCursorPosition(X, Y);
 
-            if (New)
+            void DrawLine()
             {
-                void DrawLine()
-                {
-                    Builder.SetColor(Border.Color)
-                           .Append(Palette[6])
-                           .Append(Palette[0], Inner)
-                           .Append(Palette[7]);
-                }
-
-                DrawLine();
-
-                Builder.NextLine(StartX)
-                       .Append(' ', TextX - X - 1)
-                       .Append(Text, Config.Theme.PauseColor)
-                       .Append(' ', X + FieldSize.X - 1 - TextX - Text.Length)
-                       .NextLine(X);
-
-                DrawLine();
-
-                Builder.ResetColor();
-                Console.Out.Write(Builder);
+                Builder.SetColor(Border.Color)
+                       .Append(Palette[6])
+                       .Append(Palette[0], Inner)
+                       .Append(Palette[7]);
             }
-            else
+
+            DrawLine();
+
+            Builder.NextLine(StartX)
+                   .Append(' ', TextX - X - 1)
+                   .Append(Text, Config.Theme.PauseColor)
+                   .Append(' ', X + FieldSize.X - 1 - TextX - Text.Length)
+                   .NextLine(X);
+
+            DrawLine();
+
+            Builder.ResetColor();
+            Console.Out.Write(Builder);
+        }
+
+        private void HideOverlay()
+        {
+            var Builder = new StringBuilder(256);
+
+            var Border  = Config.Theme.BorderStyle;
+            var Palette = Border.Palette;
+
+            var FieldSize     = Anchors.FieldSize;
+            var FieldPosition = Anchors.FieldPosition;
+
+            var X = FieldPosition.X;
+            var Y = FieldPosition.Y + (FieldSize.Y >> 1) - 1;
+
+            var StartX = X + 1;
+            var EndX   = X + FieldSize.X - 1;
+
+            var StartLine = FieldSize.Y + FieldPosition.Y - Y - 2;
+            var LastColor = -1;
+
+            var Field      = this.Field;
+            var FieldWidth = Field.Width;
+
+            var BlockView = this.BlockView;
+            var EmptyView = this.EmptyView;
+
+            var Colors = this.Palette;
+
+            void RedrawBorder()
             {
-                var StartLine = FieldSize.Y + FieldPosition.Y - Y - 2;
-                var LastColor = -1;
+                Builder.Append(Palette[1])
+                       .SetCursorX(EndX)
+                       .Append(Palette[1]);
+            }
 
-                var Field      = this.Field;
-                var FieldWidth = Field.Width;
-
-                var BlockView = this.BlockView;
-                var EmptyView = this.EmptyView;
-
-                var Colors = this.Palette;
-
-                void RedrawBorder()
+            void DrawLine(int Line)
+            {
+                for (var i = 0; i < FieldWidth; i++)
                 {
-                    Builder.Append(Palette[1])
-                           .SetCursorX(EndX)
-                           .Append(Palette[1]);
-                }
+                    var Cell = Field[i, Line];
+                    var View = Cell != 0 ? BlockView : EmptyView;
 
-                void DrawLine(int Line)
-                {
-                    for (var i = 0; i < FieldWidth; i++)
+                    if (Cell != LastColor)
                     {
-                        var Cell = Field[i, Line];
-                        var View = Cell != 0 ? BlockView : EmptyView;
-
-                        if (Cell != LastColor)
-                        {
-                            Builder.Append(Colors[Cell]);
-                            LastColor = Cell;
-                        }
-
-                        Builder.Append(View);
+                        Builder.Append(Colors[Cell]);
+                        LastColor = Cell;
                     }
+
+                    Builder.Append(View);
                 }
-
-                Builder.SetColor(Border.Color);
-                RedrawBorder();
-
-                Builder.Append("\n\n").SetCursorX(X);
-                RedrawBorder();
-
-                Builder.SetCursorPosition(X + 1, Y);
-                DrawLine(StartLine);
-
-                Builder.NextLine(StartX);
-                DrawLine(StartLine - 1);
-
-                Builder.NextLine(StartX);
-                DrawLine(StartLine - 2);
-
-                Builder.ResetColor();
-                Console.Out.Write(Builder);
-
-                UpdateBlocks(); //Optimize
             }
+
+            Builder.SetColor(Border.Color);
+            RedrawBorder();
+
+            Builder.Append("\n\n").SetCursorX(X);
+            RedrawBorder();
+
+            Builder.SetCursorPosition(X + 1, Y);
+            DrawLine(StartLine);
+
+            Builder.NextLine(StartX);
+            DrawLine(StartLine - 1);
+
+            Builder.NextLine(StartX);
+            DrawLine(StartLine - 2);
+
+            Builder.ResetColor();
+            Console.Out.Write(Builder);
+
+            UpdateBlocks(); //Optimize
         }
 
 
@@ -443,11 +471,11 @@ namespace Consolio.Tetris
             var Anchors     = this.Anchors;
             var Placeholder = Config.Theme.QueuePlaceHolder;
 
-            var Size    = Anchors.NextBlocks;
-            var Total   = Size.X * Size.Y;
-            var Filled  = Math.Min(Tetris.NextBlocks.Count, Total);
+            var Size   = Anchors.NextBlocks;
+            var Total  = Size.X * Size.Y;
+            var Filled = Math.Min(Tetris.NextBlocks.Count, Total);
 
-            var Start    = Anchors.NextBlocksContent;
+            var Start = Anchors.NextBlocksContent;
 
             Builder.SetColor(Placeholder.Color);
 

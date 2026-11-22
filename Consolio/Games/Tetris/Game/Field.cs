@@ -71,18 +71,21 @@ namespace Consolio.Tetris
         }
 
 
-        public void Add(Vector2Int Position, Block Block)
+        public bool Add(Vector2Int Position, Block Block)
         {
             var Cells  = this.Cells;
             var Height = this.Height;
 
             foreach (var Cell in Block.EnumerateCells(Position))
             {
-                if (Cell.Y < Height)
+                if (Cell.Y >= Height)
                 {
-                    Cells[Cell.X, Cell.Y] = Block.Color;
+                    return false;
                 }
+                Cells[Cell.X, Cell.Y] = Block.Color;
             }
+
+            return true;
         }
 
 

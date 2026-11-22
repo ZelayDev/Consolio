@@ -30,6 +30,8 @@ namespace Consolio.Tetris
         private CancellationTokenSource? GameLoopCancellationToken;
 
         private int Delay;
+
+        private bool GameOver;
         #endregion
 
         #region Properties
@@ -124,9 +126,9 @@ namespace Consolio.Tetris
                 {
                     var Key = Console.ReadKey(true).Key;
 
-                    if (HandleKey(Key))
+                    if (GameOver || HandleKey(Key))
                     {
-                        GameLoopCancellationToken!.Cancel();
+                        Exit();
                         break;
                     }
                 }
@@ -400,7 +402,13 @@ namespace Consolio.Tetris
 
         private void PlaceBlock(PlacedBlock Block)
         {
-            Field.Add(Block.Position, Block.Block);
+            if (!Field.Add(Block.Position, Block.Block))
+            {
+                Visualizer.ShowGameOver();
+                GameOver = true;
+                return;
+            }
+            
             RemoveFullLines(Block.Position, Block.Block);
             ChangeBlock();
 
@@ -408,6 +416,12 @@ namespace Consolio.Tetris
             var Count      = PlacedBlocks[BlockIndex] + 1;
             PlacedBlocks[BlockIndex] = Count;
             OnBlockPlaced?.Invoke(BlockIndex, Count);
+        }
+
+
+        private void Exit()
+        {
+            GameLoopCancellationToken!.Cancel();
         }
         
         
