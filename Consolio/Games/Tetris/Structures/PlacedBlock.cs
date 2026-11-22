@@ -1,4 +1,6 @@
-namespace Consolio.Tetris
+using Consolio;
+
+namespace Consolio.Tetromino
 {
     public readonly struct PlacedBlock
     {

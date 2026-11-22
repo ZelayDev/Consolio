@@ -1,6 +1,8 @@
-namespace Consolio.Tetris
+using Consolio;
+
+namespace Consolio.Tetromino
 {
-    public sealed class Tetris : Game
+    public sealed class Tetromino : Game
     {
         #region Data
         private readonly Config          Config;
@@ -35,13 +37,13 @@ namespace Consolio.Tetris
         #endregion
 
         #region Properties
-        public override string Name => "TETRIS";
+        public override string Name => "Tetromino";
 
         public ReadOnlySpan<int> BlockStatistic => PlacedBlocks;
         #endregion
 
         #region Constructors
-        public Tetris()
+        public Tetromino()
         {
             Config     = LoadConfig<Config>()?.Correct() ?? Config.Default;
             Field      = new Field(Config.FieldSize);
@@ -60,12 +62,9 @@ namespace Consolio.Tetris
         }
         #endregion
 
-        #region PublicMethods
+        #region OverrideMethods
         public override async Task Run()
         {
-            Console.Write("\x1b[?1049h");
-            Console.CursorVisible = false;
-
             Visualizer.Initialize();
             CurrentBlock.Value = new PlacedBlock(StartBlockPosition, BlockRandomizer.Next());
             FillBlockQueue();
@@ -94,10 +93,8 @@ namespace Consolio.Tetris
                 await GameTask;
             }
             catch (OperationCanceledException) { }
-
-            Console.Write("\x1b[?1049l");
-            Console.CursorVisible = true;
-            GameLoopCancellationToken.Dispose();
+            
+            GameLoopCancellationToken?.Dispose();
         }
         #endregion
 

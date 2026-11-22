@@ -1,4 +1,4 @@
-namespace Consolio.Tetris
+namespace Consolio.Tetromino
 {
     public sealed class BlockRandomizer : IBlockRandomizer
     {

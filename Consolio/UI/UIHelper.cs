@@ -8,14 +8,5 @@ namespace Consolio
         {
             Console.Out.Write(new StringBuilder(512).DrawBorder(Start, Size, Style));
         }
-
-        public static string GetBorderPalette(BorderLine Style)
-        {
-            return Style switch
-            {
-                BorderLine.DoubleLine => "═║╔╗╚╝╠╣",
-                _ => "─│┌┐└┘├┤"
-            };
-        }
     }
 }

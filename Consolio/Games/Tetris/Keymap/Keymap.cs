@@ -1,6 +1,6 @@
 using static System.ConsoleKey;
 
-namespace Consolio.Tetris
+namespace Consolio.Tetromino
 {
     public sealed class Keymap
     {

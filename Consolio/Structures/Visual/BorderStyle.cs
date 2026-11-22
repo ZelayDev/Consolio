@@ -4,7 +4,9 @@ namespace Consolio
 {
     public readonly struct BorderStyle
     {
-        [JsonIgnore]public string Palette { get; private init; }
+        private const string DefaultPalette = "─│┌┐└┘├┤";
+        
+        [JsonIgnore] public string Palette { get; private init; }
 
         public RGBColor   Color { get; init; }
         public BorderLine Style
@@ -13,8 +15,24 @@ namespace Consolio
             init
             {
                 field = value;
-                Palette = UIHelper.GetBorderPalette(value);
+                Palette = GetBorderPalette(value);
             }
+        }
+
+
+        public BorderStyle()
+        {
+            Palette = DefaultPalette;
+        }
+        
+        
+        public static string GetBorderPalette(BorderLine Style)
+        {
+            return Style switch
+            {
+                BorderLine.DoubleLine => "═║╔╗╚╝╠╣",
+                _                     => DefaultPalette
+            };
         }
     }
 }

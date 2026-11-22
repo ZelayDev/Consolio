@@ -1,12 +1,13 @@
 using System.Text;
+using Consolio;
 
-namespace Consolio.Tetris
+namespace Consolio.Tetromino
 {
     public sealed class Visualizer
     {
         private readonly Config  Config;
         private readonly Anchors Anchors;
-        private readonly Tetris  Tetris;
+        private readonly Tetromino  Tetromino;
         private readonly Field   Field;
 
         private readonly BorderStyle BorderStyle;
@@ -16,9 +17,9 @@ namespace Consolio.Tetris
         private readonly string EmptyView;
 
 
-        public Visualizer(Tetris Tetris, Field Field, Config Config)
+        public Visualizer(Tetromino Tetromino, Field Field, Config Config)
         {
-            this.Tetris = Tetris;
+            this.Tetromino = Tetromino;
             this.Field  = Field;
             this.Config = Config;
 
@@ -34,25 +35,25 @@ namespace Consolio.Tetris
 
         public void Initialize()
         {
-            Tetris.Paused.Changed += Update;
-            Tetris.Score.Changed  += Update;
-            Tetris.Lines.Changed  += Update;
-            Tetris.Level.Changed  += Update;
+            Tetromino.Paused.Changed += Update;
+            Tetromino.Score.Changed  += Update;
+            Tetromino.Lines.Changed  += Update;
+            Tetromino.Level.Changed  += Update;
 
-            Tetris.CurrentBlock.Changed += Update;
-            Tetris.Shadow.Changed       += Update;
-            Tetris.OnBlockPlaced        += Update;
-            Tetris.NextBlocksChanged    += _ => Update();
+            Tetromino.CurrentBlock.Changed += Update;
+            Tetromino.Shadow.Changed       += Update;
+            Tetromino.OnBlockPlaced        += Update;
+            Tetromino.NextBlocksChanged    += _ => Update();
 
-            Tetris.Paused.Changed += UpdatePaused;
-            Tetris.Score.Changed  += UpdateScore;
-            Tetris.Lines.Changed  += UpdateLines;
-            Tetris.Level.Changed  += UpdateLevel;
+            Tetromino.Paused.Changed += UpdatePaused;
+            Tetromino.Score.Changed  += UpdateScore;
+            Tetromino.Lines.Changed  += UpdateLines;
+            Tetromino.Level.Changed  += UpdateLevel;
 
-            Tetris.CurrentBlock.Changed += UpdateBlock;
-            Tetris.Shadow.Changed       += UpdateBlock;
-            Tetris.OnBlockPlaced        += UpdateBlockCount;
-            Tetris.NextBlocksChanged    += UpdateNextBlocks;
+            Tetromino.CurrentBlock.Changed += UpdateBlock;
+            Tetromino.Shadow.Changed       += UpdateBlock;
+            Tetromino.OnBlockPlaced        += UpdateBlockCount;
+            Tetromino.NextBlocksChanged    += UpdateNextBlocks;
         }
 
         public void UpdateLinesAbove(int Line)
@@ -128,8 +129,8 @@ namespace Consolio.Tetris
 
         private void UpdateBlocks()
         {
-            UpdateBlock(Tetris.CurrentBlock);
-            UpdateBlock(Tetris.Shadow);
+            UpdateBlock(Tetromino.CurrentBlock);
+            UpdateBlock(Tetromino.Shadow);
         }
 
         private void UpdateBlock(Observable<PlacedBlock> Block)
@@ -407,13 +408,13 @@ namespace Consolio.Tetris
                 Builder.AppendIndicator(Header, HeaderColor, Value.Value, IndicatorColor, TotalWidth, LeaderDots);
             }
 
-            AppendIndicator("SCORE: ", Theme.ScoreColor, Tetris.Score);
+            AppendIndicator("SCORE: ", Theme.ScoreColor, Tetromino.Score);
             Builder.NextLine(CursorX);
 
-            AppendIndicator("LINES: ", Theme.LinesColor, Tetris.Lines);
+            AppendIndicator("LINES: ", Theme.LinesColor, Tetromino.Lines);
             Builder.NextLine(CursorX);
 
-            AppendIndicator("LEVEL: ", Theme.LevelColor, Tetris.Level);
+            AppendIndicator("LEVEL: ", Theme.LevelColor, Tetromino.Level);
             Builder.ResetColor();
 
             Console.Out.Write(Builder);
@@ -430,7 +431,7 @@ namespace Consolio.Tetris
             var LeaderDotsColor = Theme.LeaderDots;
             var IndicatorColor  = Theme.IndicatorColor;
 
-            var Statistic  = Tetris.BlockStatistic;
+            var Statistic  = Tetromino.BlockStatistic;
             var TotalWidth = Anchors.BlockStatisticSize.X - 2;
             var CursorX    = Anchors.BlockStatisticPosition.X + 1;
 
@@ -473,7 +474,7 @@ namespace Consolio.Tetris
 
             var Size   = Anchors.NextBlocks;
             var Total  = Size.X * Size.Y;
-            var Filled = Math.Min(Tetris.NextBlocks.Count, Total);
+            var Filled = Math.Min(Tetromino.NextBlocks.Count, Total);
 
             var Start = Anchors.NextBlocksContent;
 
@@ -491,7 +492,7 @@ namespace Consolio.Tetris
             Builder.ResetColor();
             Console.Out.Write(Builder);
 
-            UpdateNextBlocks(Tetris.NextBlocks);
+            UpdateNextBlocks(Tetromino.NextBlocks);
         }
 
         private void DrawKeymap()

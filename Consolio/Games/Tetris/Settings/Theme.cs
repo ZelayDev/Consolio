@@ -1,4 +1,6 @@
-namespace Consolio.Tetris
+using Consolio;
+
+namespace Consolio.Tetromino
 {
     public sealed class Theme
     {
@@ -24,7 +26,7 @@ namespace Consolio.Tetris
 
         public ColorText Header { get; init; } = new()
         {
-            Text  = "===TETRIS===",
+            Text  = "===TETROMINO===",
             Color = new RGBColor(211, 235, 33)
         };
 
