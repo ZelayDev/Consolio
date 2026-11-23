@@ -1,9 +1,8 @@
 using System.Text;
-using Consolio;
 
 namespace Consolio.Tetromino
 {
-    public sealed class Visualizer
+    public sealed class Visualizer : IScreen
     {
         private readonly Config  Config;
         private readonly Anchors Anchors;
@@ -35,15 +34,15 @@ namespace Consolio.Tetromino
 
         public void Initialize()
         {
-            Tetromino.Paused.Changed += Update;
-            Tetromino.Score.Changed  += Update;
-            Tetromino.Lines.Changed  += Update;
-            Tetromino.Level.Changed  += Update;
+            Tetromino.Paused.Changed += ScreenSizeObserver.Check;
+            Tetromino.Score.Changed  += ScreenSizeObserver.Check;
+            Tetromino.Lines.Changed  += ScreenSizeObserver.Check;
+            Tetromino.Level.Changed  += ScreenSizeObserver.Check;
 
-            Tetromino.CurrentBlock.Changed += Update;
-            Tetromino.Shadow.Changed       += Update;
-            Tetromino.OnBlockPlaced        += Update;
-            Tetromino.NextBlocksChanged    += _ => Update();
+            Tetromino.CurrentBlock.Changed += ScreenSizeObserver.Check;
+            Tetromino.Shadow.Changed       += ScreenSizeObserver.Check;
+            Tetromino.OnBlockPlaced        += ScreenSizeObserver.Check;
+            Tetromino.NextBlocksChanged    += ScreenSizeObserver.Check;
 
             Tetromino.Paused.Changed += UpdatePaused;
             Tetromino.Score.Changed  += UpdateScore;
@@ -54,11 +53,13 @@ namespace Consolio.Tetromino
             Tetromino.Shadow.Changed       += UpdateBlock;
             Tetromino.OnBlockPlaced        += UpdateBlockCount;
             Tetromino.NextBlocksChanged    += UpdateNextBlocks;
+
+            ScreenSizeObserver.Update();
         }
 
         public void UpdateLinesAbove(int Line)
         {
-            Update();
+            ScreenSizeObserver.Check();
 
             var Field   = this.Field;
             var Palette = this.Palette;
@@ -110,20 +111,13 @@ namespace Consolio.Tetromino
         {
             DrawOverlay("GAME OVER");
         }
-        
 
-        private void Update<T>(T A, T B)
-        {
-            Update();
-        }
 
-        private void Update()
+        public void OnScreenSizeChanged(int Width, int Height)
         {
-            if (Anchors.Update())
-            {
-                Console.Clear();
-                DrawUI();
-            }
+            Anchors.Update(Width, Height);
+            Console.Clear();
+            DrawUI();
         }
 
 
@@ -303,29 +297,29 @@ namespace Consolio.Tetromino
             var StartX = X + 1;
             var EndX   = X + FieldSize.X - 1;
 
-            var StartLine = FieldSize.Y + FieldPosition.Y - Y - 2;
-            var LastColor = -1;
+            var Field       = this.Field;
+            var FieldWidth  = Field.Width;
+            var FieldHeight = Field.Height;
 
-            var Field      = this.Field;
-            var FieldWidth = Field.Width;
+            var StartLine = FieldHeight - 1 - (Y - FieldPosition.Y - 1);
 
             var BlockView = this.BlockView;
             var EmptyView = this.EmptyView;
 
             var Colors = this.Palette;
 
-            void RedrawBorder()
+            void DrawRow(int Line, int ScreenY)
             {
-                Builder.Append(Palette[1])
-                       .SetCursorX(EndX)
-                       .Append(Palette[1]);
-            }
+                var LastColor = -1;
 
-            void DrawLine(int Line)
-            {
-                for (var i = 0; i < FieldWidth; i++)
+                Builder.SetColor(Border.Color);
+                Builder.SetCursorPosition(X, ScreenY).Append(Palette[1]);
+
+                Builder.SetCursorPosition(StartX, ScreenY);
+
+                for (var I = 0; I < FieldWidth; I++)
                 {
-                    var Cell = Field[i, Line];
+                    var Cell = Field[I, Line];
                     var View = Cell != 0 ? BlockView : EmptyView;
 
                     if (Cell != LastColor)
@@ -336,27 +330,19 @@ namespace Consolio.Tetromino
 
                     Builder.Append(View);
                 }
+
+                Builder.SetColor(Border.Color);
+                Builder.SetCursorX(EndX).Append(Palette[1]);
             }
 
-            Builder.SetColor(Border.Color);
-            RedrawBorder();
-
-            Builder.Append("\n\n").SetCursorX(X);
-            RedrawBorder();
-
-            Builder.SetCursorPosition(X + 1, Y);
-            DrawLine(StartLine);
-
-            Builder.NextLine(StartX);
-            DrawLine(StartLine - 1);
-
-            Builder.NextLine(StartX);
-            DrawLine(StartLine - 2);
+            DrawRow(StartLine,     Y);
+            DrawRow(StartLine - 1, Y + 1);
+            DrawRow(StartLine - 2, Y + 2);
 
             Builder.ResetColor();
             Console.Out.Write(Builder);
 
-            UpdateBlocks(); //Optimize
+            UpdateBlocks();
         }
 
 
@@ -389,7 +375,14 @@ namespace Consolio.Tetromino
             UIHelper.DrawBorder(Anchors.KeymapPosition, Anchors.KeymapSize, BorderStyle);
             DrawKeymap();
 
-            UpdateBlocks();
+            if (Tetromino.Paused.Value)
+            {
+                UpdatePaused(true, true);
+            }
+            else
+            {
+                UpdateBlocks();
+            }
         }
 
         private void DrawStatisticUI()

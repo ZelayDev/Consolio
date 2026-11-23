@@ -7,7 +7,9 @@ namespace Consolio.Snake
         #endregion
 
         #region Properties
-        public override string Name => "Snake";
+        protected override string Name => "Snake";
+
+        public override IScreen Screen => default!;
         #endregion
 
         #region Constructors

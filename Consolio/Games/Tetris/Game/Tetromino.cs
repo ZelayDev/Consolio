@@ -1,5 +1,3 @@
-using Consolio;
-
 namespace Consolio.Tetromino
 {
     public sealed class Tetromino : Game
@@ -13,7 +11,7 @@ namespace Consolio.Tetromino
         private readonly IBlockRandomizer BlockRandomizer;
 
         public readonly Observable<bool> Paused = new();
-        
+
         public readonly Observable<int> Score = new();
         public readonly Observable<int> Lines = new();
         public readonly Observable<int> Level = new();
@@ -21,7 +19,7 @@ namespace Consolio.Tetromino
         public readonly Observable<PlacedBlock> CurrentBlock = new();
         public readonly Observable<PlacedBlock> Shadow       = new();
         public readonly Queue<Block>            NextBlocks;
-        
+
         private readonly int[] PlacedBlocks = new int[7];
 
         public event Action<int, int>?     OnBlockPlaced;
@@ -37,7 +35,9 @@ namespace Consolio.Tetromino
         #endregion
 
         #region Properties
-        public override string Name => "Tetromino";
+        protected override string Name => "Tetromino";
+
+        public override IScreen Screen => Visualizer;
 
         public ReadOnlySpan<int> BlockStatistic => PlacedBlocks;
         #endregion
@@ -93,7 +93,7 @@ namespace Consolio.Tetromino
                 await GameTask;
             }
             catch (OperationCanceledException) { }
-            
+
             GameLoopCancellationToken?.Dispose();
         }
         #endregion
@@ -136,7 +136,7 @@ namespace Consolio.Tetromino
             }
         }
 
-        
+
         private bool HandleKey(ConsoleKey Key)
         {
             if (Paused.Value)
@@ -146,7 +146,7 @@ namespace Consolio.Tetromino
                     case TetrisPauseAction.Resume:
                         ExecutableQueue.Add(Resume);
                         break;
-                    
+
                     case TetrisPauseAction.Exit:
                         return true;
                 }
@@ -183,7 +183,7 @@ namespace Consolio.Tetromino
 
             return false;
         }
-        
+
         private void Lower()
         {
             var Block       = CurrentBlock.Value;
@@ -231,7 +231,7 @@ namespace Consolio.Tetromino
                 CurrentBlock.Value = new PlacedBlock(Block.Position, Rotated);
             }
         }
-        
+
         private void HardDrop()
         {
             var Block = CurrentBlock.Value;
@@ -246,7 +246,7 @@ namespace Consolio.Tetromino
             PlaceBlock(Final);
         }
         #endregion
-        
+
         #region Pause
         private void Pause()
         {
@@ -255,7 +255,8 @@ namespace Consolio.Tetromino
                 return;
             }
 
-            Paused.Value = true;
+            ScreenSizeObserver.Auto = true;
+            Paused.Value            = true;
         }
 
         private void Resume()
@@ -274,17 +275,17 @@ namespace Consolio.Tetromino
             else
             {
                 Task.Run
-                (
-                    async () =>
+                (async () =>
                     {
                         await Task.Delay(Delay);
-                        Paused.Value = false;
+                        ScreenSizeObserver.Auto = false;
+                        Paused.Value            = false;
                     }
                 );
             }
         }
         #endregion
-        
+
         #region Update
         private void UpdateLevel(int OldLines, int NewLines)
         {
@@ -375,7 +376,7 @@ namespace Consolio.Tetromino
             }
         }
         #endregion
-        
+
         #region HelpMethods
         private void Move(int Offset)
         {
@@ -405,7 +406,7 @@ namespace Consolio.Tetromino
                 GameOver = true;
                 return;
             }
-            
+
             RemoveFullLines(Block.Position, Block.Block);
             ChangeBlock();
 
@@ -420,8 +421,8 @@ namespace Consolio.Tetromino
         {
             GameLoopCancellationToken!.Cancel();
         }
-        
-        
+
+
         private Vector2Int GetShadowPosition(PlacedBlock Block)
         {
             var Field    = this.Field;
@@ -447,7 +448,7 @@ namespace Consolio.Tetromino
                 Queue.Enqueue(Randomizer.Next());
             }
         }
-        
+
         private static Vector2Int GetStartBlockPosition(Vector2Int FieldSize)
         {
             return new Vector2Int((FieldSize.X >> 1) - 1, FieldSize.Y + 2);

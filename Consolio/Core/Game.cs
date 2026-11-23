@@ -4,10 +4,12 @@ namespace Consolio
 {
     public abstract class Game
     {
-        public abstract string Name { get; }
+        protected abstract string Name { get; }
+        
+        public abstract IScreen Screen { get; }
         
         public abstract Task Run();
-
+        
 
         protected TConfig? LoadConfig<TConfig>() where TConfig : class
         {

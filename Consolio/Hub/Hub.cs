@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Consolio
 {
-    public sealed class Hub
+    public sealed class Hub : IScreen
     {
         #region Constants & StaticFields
         private const string SectionTitle = "Games";
@@ -33,6 +33,8 @@ namespace Consolio
         private Vector2Int ScreenSize;
         private Vector2Int Start;
         private bool       Running;
+
+        public bool AutoScreenUpdate => true;
         #endregion
 
         #region Constructors
@@ -41,6 +43,10 @@ namespace Consolio
             Theme     = LoadTheme();
             Selection = new Observable<int>();
             Running   = true;
+
+            Selection.Changed += UpdateSelection;
+            
+            ScreenSizeObserver.Push(this);
         }
         #endregion
 
@@ -62,7 +68,7 @@ namespace Consolio
         {
             while (Running)
             {
-                CheckWindowSize();
+                ScreenSizeObserver.Check();
                 await HandleKey(Console.ReadKey(true).Key);
             }
         }
@@ -82,15 +88,25 @@ namespace Consolio
                     break;
 
                 case ConsoleKey.Enter:
-                    await GameFactories[Selection.Value].Factory().Run();
-                    Console.Clear();
-                    DrawMenu();
+                    await RunGame();
                     break;
 
                 case ConsoleKey.Escape or ConsoleKey.Backspace or ConsoleKey.Q:
                     Running = false;
                     break;
             }
+        }
+        
+        private async Task RunGame()
+        {
+            var Game = GameFactories[Selection.Value].Factory();
+            
+            ScreenSizeObserver.Push(Game.Screen);
+
+            await Game.Run();
+
+            ScreenSizeObserver.Pop();
+            ScreenSizeObserver.Update();
         }
 
         private void MoveSelectionDown()
@@ -115,35 +131,28 @@ namespace Consolio
         #endregion
 
         #region Visual
-        private void CheckWindowSize()
+        public void OnScreenSizeChanged(int Width, int Height)
         {
-            var Screen = ScreenSize;
-
-            var WindowWidth  = Console.WindowWidth;
-            var WindowHeight = Console.WindowHeight;
-
-            if (WindowWidth != Screen.X || WindowHeight != Screen.Y)
-            {
-                ScreenSize = new Vector2Int(WindowWidth, WindowHeight);
-                Console.Clear();
-                DrawMenu();
-            }
+            ScreenSize = new Vector2Int(Width, Height);
+            Console.Clear();
+            DrawMenu();
         }
+        
 
         private void DrawMenu()
         {
-            CheckWindowSize();
+            ScreenSizeObserver.Check();
 
             var Theme      = this.Theme;
             var ScreenSize = this.ScreenSize;
             var Builder    = new StringBuilder(512);
 
-            var SeparatorWidth = MenuSize.X - 2;
+            var SeparatorWidth = MenuSize.X + 2;
 
             var HeaderStart    = new Vector2Int((ScreenSize.X - HeaderSize.X) / 2, 0);
             var SectionStart   = new Vector2Int((ScreenSize.X - SectionTitle.Length) / 2, HeaderSize.Y + 1);
             var SeparatorStart = new Vector2Int((ScreenSize.X - SeparatorWidth) / 2, 0);
-            var MenuStart      = new Vector2Int((ScreenSize.X - MenuSize.X) / 2, SectionStart.Y + 2);
+            var MenuStart      = new Vector2Int((ScreenSize.X - MenuSize.X - 1) / 2, SectionStart.Y + 2);
 
             Start = MenuStart;
 
@@ -183,28 +192,65 @@ namespace Consolio
             var Selection = this.Selection.Value;
             var Games     = GameFactories;
 
-            for (var Index = 0; Index < Games.Length; Index++)
-            {
-                var IsSelected = Index == Selection;
+            var CursorX = StartX + 2;
 
-                Builder.SetColor(IsSelected ? Theme.SelectedNameColor : Theme.NameColor)
-                       .SetCursorPosition(StartX, StartY + Index)
-                       .Append(IsSelected ? '>' : ' ')
-                       .Append(' ')
-                       .Append(Games[Index].Name);
+            Builder.SetCursorY(StartY);
+
+            if (Selection > 0)
+            {
+                Builder.SetColor(Theme.NameColor);
+
+                for (var i = 0; i < Selection; i++)
+                {
+                    Builder.SetCursorX(CursorX)
+                           .Append(Games[i].Name)
+                           .Append('\n');
+                }
+            }
+
+            Builder.SetColor(Theme.SelectedNameColor)
+                   .SetCursorX(StartX)
+                   .Append("< ")
+                   .Append(Games[Selection].Name)
+                   .SetCursorX(Start.X + MenuSize.X)
+                   .Append(" >\n");
+
+            if (Selection < GameFactories.Length - 1)
+            {
+                Builder.SetColor(Theme.NameColor);
+
+                for (var i = Selection + 1; i < Games.Length; i++)
+                {
+                    Builder.SetCursorX(CursorX)
+                           .Append(Games[i].Name)
+                           .Append('\n');
+                }
             }
         }
 
         private void UpdateSelection(int Old, int New)
         {
-            CheckWindowSize();
+            ScreenSizeObserver.Check();
 
-            var Start   = this.Start;
+            var Start = this.Start;
+            var Width = MenuSize.X;
+
             var Builder = new StringBuilder();
 
-            Builder.SetCursorPosition(Start.X, Start.Y + Old);
+            Builder.SetCursorPosition(Start.X, Start.Y + Old)
+                   .SetColor(Theme.NameColor)
+                   .Append("  ")
+                   .Append(GameFactories[Old].Name)
+                   .SetCursorX(Start.X + MenuSize.X)
+                   .Append("  ");
 
-            //TODO
+            Builder.SetCursorPosition(Start.X, Start.Y + New)
+                   .SetColor(Theme.SelectedNameColor)
+                   .Append("< ")
+                   .Append(GameFactories[New].Name)
+                   .SetCursorX(Start.X + MenuSize.X)
+                   .Append(" >");
+
             Console.Out.Write(Builder);
         }
         #endregion

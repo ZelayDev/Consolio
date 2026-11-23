@@ -31,8 +31,6 @@ namespace Consolio.Tetromino
         public Vector2Int LinesPosition => StatisticPosition + new Vector2Int(StatisticSize.X - 1, 2);
         public Vector2Int LevelPosition => StatisticPosition + new Vector2Int(StatisticSize.X - 1, 3);
 
-        private int ScreenWidth, ScreenHeight;
-
 
         public Anchors(Config Config)
         {
@@ -49,27 +47,10 @@ namespace Consolio.Tetromino
             NextBlocks = new Vector2Int((NextBlocksSize.X - 2) / 6, (NextBlocksSize.Y - 2) / 2);
         }
 
-
-        public bool Update()
+        
+        public void Update(int Width, int Height)
         {
-            var WindowWidth  = Console.WindowWidth;
-            var WindowHeight = Console.WindowHeight;
-
-            if (WindowWidth != ScreenWidth || WindowHeight != ScreenHeight)
-            {
-                ScreenWidth  = WindowWidth;
-                ScreenHeight = WindowHeight;
-
-                Update(ScreenWidth, ScreenHeight);
-                return true;
-            }
-
-            return false;
-        }
-
-        private void Update(int ScreenWidth, int ScreenHeight)
-        {
-            var Center = (ScreenWidth + 1) / 2;
+            var Center = (Width + 1) / 2;
 
             HeaderPosition         = new Vector2Int(Center - (HeaderLength + 1) / 2, 0);
             FieldPosition          = new Vector2Int(Center - FieldSize.X / 2 + 1, 3);
