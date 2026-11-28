@@ -5,7 +5,7 @@ namespace Consolio.Tetromino
         #region Data
         private readonly Config          Config;
         private readonly Field           Field;
-        private readonly Visualizer      Visualizer;
+        private readonly Renderer        Renderer;
         private readonly ExecutableQueue ExecutableQueue;
 
         private readonly IBlockRandomizer BlockRandomizer;
@@ -31,13 +31,13 @@ namespace Consolio.Tetromino
 
         private int Delay;
 
-        private bool GameOver;
+        private volatile bool GameOver;
         #endregion
 
         #region Properties
         protected override string Name => "Tetromino";
 
-        public override IScreen Screen => Visualizer;
+        public override IScreen Screen => Renderer;
 
         public ReadOnlySpan<int> BlockStatistic => PlacedBlocks;
         #endregion
@@ -45,9 +45,9 @@ namespace Consolio.Tetromino
         #region Constructors
         public Tetromino()
         {
-            Config     = LoadConfig<Config>()?.Correct() ?? Config.Default;
-            Field      = new Field(Config.FieldSize);
-            Visualizer = new Visualizer(this, Field, Config);
+            Config   = LoadConfig(Config.Default);
+            Field    = new Field(Config.FieldSize);
+            Renderer = new Renderer(this, Field, Config);
 
             BlockRandomizer = GetRandomizer(Config.RandomizerKind, Config.Theme.Colors.Length);
 
@@ -65,7 +65,7 @@ namespace Consolio.Tetromino
         #region OverrideMethods
         public override async Task Run()
         {
-            Visualizer.Initialize();
+            Renderer.Initialize();
             CurrentBlock.Value = new PlacedBlock(StartBlockPosition, BlockRandomizer.Next());
             FillBlockQueue();
 
@@ -121,67 +121,66 @@ namespace Consolio.Tetromino
             {
                 while (!Token.IsCancellationRequested)
                 {
-                    var Key = Console.ReadKey(true).Key;
-
-                    if (GameOver || HandleKey(Key))
+                    HandleKey(Console.ReadKey(true).Key);
+                        
+                    if (GameOver)
                     {
                         Exit();
                         break;
                     }
                 }
             }
-            catch (Exception Exception)
+            catch
             {
                 GameLoopCancellationToken?.Cancel();
             }
         }
 
 
-        private bool HandleKey(ConsoleKey Key)
+        private void HandleKey(ConsoleKey Key)
         {
             if (Paused.Value)
             {
                 switch (Config.Keymap.GetPauseAction(Key))
                 {
-                    case TetrisPauseAction.Resume:
+                    case TetrominoPauseAction.Resume:
                         ExecutableQueue.Add(Resume);
                         break;
 
-                    case TetrisPauseAction.Exit:
-                        return true;
+                    case TetrominoPauseAction.Exit:
+                        GameOver = true;
+                        break;
                 }
             }
             else
             {
                 switch (Config.Keymap.GetAction(Key))
                 {
-                    case TetrisAction.MoveLeft:
+                    case TetrominoAction.MoveLeft:
                         ExecutableQueue.Add(MoveLeft);
                         break;
 
-                    case TetrisAction.MoveRight:
+                    case TetrominoAction.MoveRight:
                         ExecutableQueue.Add(MoveRight);
                         break;
 
-                    case TetrisAction.RotateLeft:
+                    case TetrominoAction.RotateLeft:
                         ExecutableQueue.Add(RotateLeft);
                         break;
 
-                    case TetrisAction.RotateRight:
+                    case TetrominoAction.RotateRight:
                         ExecutableQueue.Add(RotateRight);
                         break;
 
-                    case TetrisAction.HardDrop:
+                    case TetrominoAction.HardDrop:
                         ExecutableQueue.Add(HardDrop);
                         break;
 
-                    case TetrisAction.Pause:
+                    case TetrominoAction.Pause:
                         ExecutableQueue.Add(Pause);
                         break;
                 }
             }
-
-            return false;
         }
 
         private void Lower()
@@ -346,7 +345,7 @@ namespace Consolio.Tetromino
 
             RemoveLines(Cleared);
 
-            Visualizer.UpdateLinesAbove(Cleared[0]);
+            Renderer.UpdateLinesAbove(Cleared[0]);
         }
 
         private void RemoveLines(List<int> Lines)
@@ -402,7 +401,7 @@ namespace Consolio.Tetromino
         {
             if (!Field.Add(Block.Position, Block.Block))
             {
-                Visualizer.ShowGameOver();
+                Renderer.ShowGameOver();
                 GameOver = true;
                 return;
             }

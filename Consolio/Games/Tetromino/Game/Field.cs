@@ -5,6 +5,9 @@ namespace Consolio.Tetromino
 {
     public sealed class Field
     {
+        public static readonly Vector2Int MinSize = new(10, 20);
+        public static readonly Vector2Int DefaultSize = new(10, 20);
+        
         private readonly int[,] Cells;
 
         public readonly Vector2Int Size;

@@ -1,10 +1,11 @@
-using Consolio;
-
 namespace Consolio.Tetromino
 {
     public sealed class Theme
     {
         public static readonly Theme Default = new();
+        
+        private string _Block = "[]";
+        private string _Empty = "[]";
         
 
         public RGBColor IndicatorColor { get; init; } = new(200, 200, 200);
@@ -74,15 +75,27 @@ namespace Consolio.Tetromino
             "▄▄▄▄"
         ];
         
+        public string Block
+        {
+            get => _Block;
+            init => _Block = value;
+        }
+
+        public string Empty
+        {
+            get => _Empty;
+            init => _Empty = value;
+        }
+        
 
         private static string[] CorrectBlocks(string[] Blocks)
         {
-            if (Blocks.Length != Block.BlockCount)
+            if (Blocks.Length != Consolio.Tetromino.Block.BlockCount)
             {
                 return Default.Blocks;
             }
 
-            for (var i = 0; i < Block.BlockCount; i++)
+            for (var i = 0; i < Consolio.Tetromino.Block.BlockCount; i++)
             {
                 var Block = Blocks[i];
                 if (Block.Length < 4)
@@ -96,6 +109,18 @@ namespace Consolio.Tetromino
             }
 
             return Blocks;
+        }
+        
+        
+        public Theme Correct()
+        {
+            if (_Block.Length != _Empty.Length)
+            {
+                _Block = Default._Block;
+                _Empty = Default._Empty;
+            }
+
+            return this;
         }
     }
 }

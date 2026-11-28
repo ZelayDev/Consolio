@@ -35,7 +35,7 @@ namespace Consolio.Tetromino
         public Anchors(Config Config)
         {
             HeaderLength = Config.Theme.Header.Length;
-            BlockLength  = Config.Block.Length;
+            BlockLength  = Config.Theme.Block.Length;
 
             HeaderSize         = new Vector2Int(HeaderLength + 2, 3);
             FieldSize          = new Vector2Int(BlockLength * Config.FieldSize.X + 2, Config.FieldSize.Y + 2);
@@ -48,9 +48,9 @@ namespace Consolio.Tetromino
         }
 
         
-        public void Update(int Width, int Height)
+        public void Update(int ScreenWidth, int ScreenHeight)
         {
-            var Center = (Width + 1) / 2;
+            var Center = (ScreenWidth + 1) / 2;
 
             HeaderPosition         = new Vector2Int(Center - (HeaderLength + 1) / 2, 0);
             FieldPosition          = new Vector2Int(Center - FieldSize.X / 2 + 1, 3);

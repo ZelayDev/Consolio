@@ -1,6 +1,6 @@
 namespace Consolio.Tetromino
 {
-    public enum TetrisPauseAction
+    public enum TetrominoPauseAction
     {
         None,
         Resume,

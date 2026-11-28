@@ -1,6 +1,6 @@
 namespace Consolio.Tetromino
 {
-    public enum TetrisAction
+    public enum TetrominoAction
     {
         None,
         MoveLeft,

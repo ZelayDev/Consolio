@@ -2,12 +2,13 @@ using System.Text;
 
 namespace Consolio.Tetromino
 {
-    public sealed class Visualizer : IScreen
+    public sealed class Renderer : IScreen
     {
-        private readonly Config  Config;
-        private readonly Anchors Anchors;
-        private readonly Tetromino  Tetromino;
-        private readonly Field   Field;
+        private readonly Keymap    Keymap;
+        private readonly Theme     Theme;
+        private readonly Anchors   Anchors;
+        private readonly Tetromino Tetromino;
+        private readonly Field     Field;
 
         private readonly BorderStyle BorderStyle;
         private readonly string[]    Palette;
@@ -16,19 +17,21 @@ namespace Consolio.Tetromino
         private readonly string EmptyView;
 
 
-        public Visualizer(Tetromino Tetromino, Field Field, Config Config)
+        public Renderer(Tetromino Tetromino, Field Field, Config Config)
         {
             this.Tetromino = Tetromino;
-            this.Field  = Field;
-            this.Config = Config;
-
-            BlockView = Config.Block;
-            EmptyView = Config.Empty;
+            this.Field     = Field;
+            
+            Keymap = Config.Keymap;
+            Theme  = Config.Theme;
+            
+            BlockView = Theme.Block;
+            EmptyView = Theme.Empty;
 
             Anchors = new Anchors(Config);
 
-            BorderStyle = Config.Theme.BorderStyle;
-            Palette     = Array.ConvertAll(this.Config.Theme.Colors, static Color => $"\x1b[38;2;{Color.R};{Color.G};{Color.B}m");
+            BorderStyle = Theme.BorderStyle;
+            Palette     = Array.ConvertAll(this.Theme.Colors, static Color => $"\x1b[38;2;{Color.R};{Color.G};{Color.B}m");
         }
 
 
@@ -153,7 +156,7 @@ namespace Consolio.Tetromino
             var Filled = Math.Min(Queue.Count, Total);
 
             var Colors = Palette;
-            var Blocks = Config.Theme.Blocks;
+            var Blocks = Theme.Blocks;
 
             if (Filled == 0)
             {
@@ -208,7 +211,7 @@ namespace Consolio.Tetromino
             var String  = Value.ToString();
 
             Builder.SetCursorPosition(Position.X - String.Length, Position.Y)
-                   .Append(String, Config.Theme.IndicatorColor)
+                   .Append(String, Theme.IndicatorColor)
                    .ResetColor();
 
             Console.Out.Write(Builder);
@@ -221,7 +224,7 @@ namespace Consolio.Tetromino
             var Position = Anchors.BlockStatisticContent + new Vector2Int(-String.Length, Index * 2 + 1);
             var Builder  = new StringBuilder(64);
 
-            Builder.SetCursorPosition(Position).SetColor(Config.Theme.IndicatorColor).Append(String).ResetColor();
+            Builder.SetCursorPosition(Position).SetColor(Theme.IndicatorColor).Append(String).ResetColor();
             Console.Out.Write(Builder);
         }
 
@@ -242,7 +245,7 @@ namespace Consolio.Tetromino
         {
             var Builder = new StringBuilder(256);
 
-            var Border  = Config.Theme.BorderStyle;
+            var Border  = Theme.BorderStyle;
             var Palette = Border.Palette;
 
             var FieldSize     = Anchors.FieldSize;
@@ -252,7 +255,6 @@ namespace Consolio.Tetromino
             var Y = FieldPosition.Y + (FieldSize.Y >> 1) - 1;
 
             var StartX = X + 1;
-            var EndX   = X + FieldSize.X - 1;
 
             var Inner = FieldSize.X - 2;
             var TextX = X + 1 + ((Inner - Text.Length) >> 1);
@@ -271,7 +273,7 @@ namespace Consolio.Tetromino
 
             Builder.NextLine(StartX)
                    .Append(' ', TextX - X - 1)
-                   .Append(Text, Config.Theme.PauseColor)
+                   .Append(Text, Theme.PauseColor)
                    .Append(' ', X + FieldSize.X - 1 - TextX - Text.Length)
                    .NextLine(X);
 
@@ -285,7 +287,7 @@ namespace Consolio.Tetromino
         {
             var Builder = new StringBuilder(256);
 
-            var Border  = Config.Theme.BorderStyle;
+            var Border  = Theme.BorderStyle;
             var Palette = Border.Palette;
 
             var FieldSize     = Anchors.FieldSize;
@@ -353,7 +355,7 @@ namespace Consolio.Tetromino
 
             //Header
             UIHelper.DrawBorder(Anchors.HeaderPosition, Anchors.HeaderSize, BorderStyle);
-            Console.Write(Config.Theme.Header);
+            Console.Write(Theme.Header);
 
             //Field
             UIHelper.DrawBorder(Anchors.FieldPosition, Anchors.FieldSize, BorderStyle);
@@ -387,7 +389,7 @@ namespace Consolio.Tetromino
 
         private void DrawStatisticUI()
         {
-            var Theme   = Config.Theme;
+            var Theme   = this.Theme;
             var Builder = new StringBuilder(128);
 
             var CursorX    = Anchors.StatisticPosition.X + 1;
@@ -415,7 +417,7 @@ namespace Consolio.Tetromino
 
         private void DrawBlockStatisticUI()
         {
-            var Theme   = Config.Theme;
+            var Theme   = this.Theme;
             var Builder = new StringBuilder(512);
 
             var Colors = Theme.Colors.AsSpan(2);
@@ -463,7 +465,7 @@ namespace Consolio.Tetromino
             var Builder = new StringBuilder(256);
 
             var Anchors     = this.Anchors;
-            var Placeholder = Config.Theme.QueuePlaceHolder;
+            var Placeholder = Theme.QueuePlaceHolder;
 
             var Size   = Anchors.NextBlocks;
             var Total  = Size.X * Size.Y;
@@ -490,8 +492,8 @@ namespace Consolio.Tetromino
 
         private void DrawKeymap()
         {
-            var Keymap  = Config.Keymap;
-            var Theme   = Config.Theme;
+            var Keymap  = this.Keymap;
+            var Theme   = this.Theme;
             var Builder = new StringBuilder(256);
 
             var CursorX = Anchors.KeymapPosition.X + 2;

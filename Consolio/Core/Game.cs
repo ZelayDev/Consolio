@@ -4,6 +4,11 @@ namespace Consolio
 {
     public abstract class Game
     {
+        public static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            //TODO
+        };
+        
         protected abstract string Name { get; }
         
         public abstract IScreen Screen { get; }
@@ -11,18 +16,25 @@ namespace Consolio
         public abstract Task Run();
         
 
-        protected TConfig? LoadConfig<TConfig>() where TConfig : class
+        protected TConfig LoadConfig<TConfig>(TConfig Default) where TConfig : class
         {
+            var FilePath = GetConfigFilePath();
+
+            if (!File.Exists(FilePath))
+            {
+                var Json = JsonSerializer.Serialize(Default, JsonOptions);
+                File.WriteAllText(FilePath, Json);
+                return Default;
+            }
+            
             try
             {
-                var FilePath = GetConfigFilePath();
-                var Content  = File.ReadAllText(FilePath);
-
-                return JsonSerializer.Deserialize<TConfig>(Content);
+                var Json = File.ReadAllText(FilePath);
+                return JsonSerializer.Deserialize<TConfig>(Json, JsonOptions) ?? Default;
             }
             catch
             {
-                return null;
+                return Default;
             }
         }
         
@@ -32,7 +44,7 @@ namespace Consolio
             (
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "consolio",
-                Name.ToLowerInvariant(),
+                Name,
                 "config.json"
             );
         }
