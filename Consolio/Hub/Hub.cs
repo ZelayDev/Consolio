@@ -32,8 +32,11 @@ namespace Consolio
 
         private Vector2Int ScreenSize;
         private Vector2Int Start;
-        private bool       Running;
+        
+        private bool Running;
+        #endregion
 
+        #region Properties
         public bool AutoScreenUpdate => true;
         #endregion
 
@@ -99,14 +102,25 @@ namespace Consolio
         
         private async Task RunGame()
         {
-            var Game = GameFactories[Selection.Value].Factory();
-            
-            ScreenSizeObserver.Push(Game.Screen);
+            try
+            {
+                var Game = GameFactories[Selection.Value].Factory();
 
-            await Game.Run();
+                ScreenSizeObserver.Push(Game.Screen);
 
-            ScreenSizeObserver.Pop();
-            ScreenSizeObserver.Update();
+                await Game.Run();
+
+                ScreenSizeObserver.Pop();
+                ScreenSizeObserver.Update();
+            }
+            catch (Exception Exception)
+            {
+                Console.Write("\x1b[?1049l");
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine(Exception.GetType().FullName);
+                Console.WriteLine(Exception.Message);
+                Console.WriteLine(Exception.StackTrace);
+            }
         }
 
         private void MoveSelectionDown()

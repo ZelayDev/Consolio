@@ -6,7 +6,16 @@ namespace Consolio
     {
         public static readonly JsonSerializerOptions JsonOptions = new()
         {
-            //TODO
+            WriteIndented       = true,
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true,
+            PropertyNameCaseInsensitive = true,
+            
+            Converters =
+            {
+                new Vector2Int.JsonConverter(),
+                new RGBColor.JsonConverter()
+            }
         };
         
         protected abstract string Name { get; }
@@ -19,10 +28,11 @@ namespace Consolio
         protected TConfig LoadConfig<TConfig>(TConfig Default) where TConfig : class
         {
             var FilePath = GetConfigFilePath();
-
+            
             if (!File.Exists(FilePath))
             {
                 var Json = JsonSerializer.Serialize(Default, JsonOptions);
+                Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
                 File.WriteAllText(FilePath, Json);
                 return Default;
             }

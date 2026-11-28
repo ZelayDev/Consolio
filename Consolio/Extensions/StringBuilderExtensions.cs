@@ -51,6 +51,11 @@ namespace Consolio
                 return Builder.SetColor(Color).Append(Text);
             }
 
+            public StringBuilder Append(ColorText Text)
+            {
+                return Builder.Append(Text.Text, Text.Color);
+            }
+
 
             public StringBuilder DrawBorder(Vector2Int Start, Vector2Int Size, BorderStyle Style)
             {

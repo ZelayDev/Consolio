@@ -46,7 +46,7 @@ namespace Consolio.Snake
         public override async Task Run()
         {
             Renderer.Initialize();
-
+            
             Delay = Config.Delay.StartDelay;
 
             GameLoopCancellationToken = new CancellationTokenSource();
@@ -158,6 +158,7 @@ namespace Consolio.Snake
 
         private void Move()
         {
+            return;
             var Field = this.Field;
             
             var NewHeadPosition = HeadPosition + Direction;
@@ -173,7 +174,7 @@ namespace Consolio.Snake
                 }
                 else
                 {
-                    TailPosition = Field.GetNext(TailPosition);
+                    TailPosition = Field.RemoveTail(TailPosition);
                 }
             }
             else

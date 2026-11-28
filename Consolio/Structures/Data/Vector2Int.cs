@@ -1,44 +1,47 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Consolio
 {
-    [Serializable, StructLayout(LayoutKind.Sequential)]
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
     public struct Vector2Int : IEquatable<Vector2Int>
     {
         #region Constants
-        public static readonly Vector2Int Zero   = new Vector2Int(0, 0);
-        public static readonly Vector2Int Left   = new Vector2Int(-1, 0);
-        public static readonly Vector2Int Right  = new Vector2Int(1, 0);
-        public static readonly Vector2Int Down   = new Vector2Int(0, -1);
-        public static readonly Vector2Int Up     = new Vector2Int(0, 1);
-        public static readonly Vector2Int OneOne = new Vector2Int(1);
-
+        public static readonly Vector2Int Zero   = new(0, 0);
+        public static readonly Vector2Int Left   = new(-1, 0);
+        public static readonly Vector2Int Right  = new(1, 0);
+        public static readonly Vector2Int Down   = new(0, -1);
+        public static readonly Vector2Int Up     = new(0, 1);
+        public static readonly Vector2Int OneOne = new(1);
         #endregion
 
         #region Data
         public int X, Y;
-
         #endregion
 
         #region Properties
         public float Magnitude => MathF.Sqrt(LengthSquared);
 
-        public int LengthSquared => (X * X) + (Y * Y);
+        public int LengthSquared => X * X + Y * Y;
 
-        public Vector2Int Reversed => new Vector2Int(Y, X);
+        public Vector2Int Reversed => new(Y, X);
 
         public Vector2Int Normal
         {
             get
             {
-                if (this == Zero) { return Zero; }
-                float Magnitude = this.Magnitude;
+                if (this == Zero)
+                {
+                    return Zero;
+                }
+                var Magnitude = this.Magnitude;
                 return new Vector2Int((int)(X / Magnitude), (int)(Y / Magnitude));
             }
         }
-
         #endregion
 
         #region Constructors
@@ -59,7 +62,6 @@ namespace Consolio
             X = Info.GetInt32("X");
             Y = Info.GetInt32("Y");
         }
-
         #endregion
 
         #region Operators
@@ -78,16 +80,19 @@ namespace Consolio
         {
             return new Vector2Int(A.X * B, A.Y * B);
         }
+
         public static Vector2Int operator /(Vector2Int A, int B)
         {
             return new Vector2Int(A.X / B, A.Y / B);
         }
+
         public static Vector2Int operator ++(Vector2Int Value)
         {
             Value.X++;
             Value.Y++;
             return Value;
         }
+
         public static Vector2Int operator --(Vector2Int Value)
         {
             Value.X--;
@@ -99,42 +104,39 @@ namespace Consolio
         {
             return new Vector2Int(-Value.X, -Value.Y);
         }
-
         #endregion
 
         #region ComparisonOperators
         public static bool operator ==(Vector2Int A, Vector2Int B)
         {
-             return A.X == B.X && A.Y == B.Y;
+            return A.X == B.X && A.Y == B.Y;
         }
 
         public static bool operator !=(Vector2Int A, Vector2Int B)
         {
-             return A.X != B.X || A.Y != B.Y;
+            return A.X != B.X || A.Y != B.Y;
         }
 
         public static bool operator <(Vector2Int A, Vector2Int B)
         {
-             return A.X < B.X && A.Y < B.Y;
+            return A.X < B.X && A.Y < B.Y;
         }
 
         public static bool operator >(Vector2Int A, Vector2Int B)
         {
-             return A.X > B.X && A.Y > B.Y;
+            return A.X > B.X && A.Y > B.Y;
         }
 
         public static bool operator <=(Vector2Int A, Vector2Int B)
         {
-             return A.X <= B.X && A.Y <= B.Y;
+            return A.X <= B.X && A.Y <= B.Y;
         }
 
         public static bool operator >=(Vector2Int A, Vector2Int B)
         {
-             return A.X >= B.X && A.Y >= B.Y;
+            return A.X >= B.X && A.Y >= B.Y;
         }
-
         #endregion
-
         #endregion
 
         #region OverrideMethods
@@ -152,7 +154,6 @@ namespace Consolio
         {
             return HashCode.Combine(X, Y);
         }
-
         #endregion
 
         #region IEquatable & IEqualityComparer
@@ -170,7 +171,6 @@ namespace Consolio
         {
             return Object.GetHashCode();
         }
-
         #endregion
 
         #region Methods
@@ -179,7 +179,6 @@ namespace Consolio
         {
             this = Normal;
         }
-        
         #endregion
 
         #region Conversion
@@ -187,7 +186,6 @@ namespace Consolio
         {
             this = Reversed;
         }
-
         #endregion
 
         #region Math
@@ -195,9 +193,9 @@ namespace Consolio
         {
             ArgumentNullException.ThrowIfNull(Values);
 
-            Vector2Int Result = Zero;
+            var Result = Zero;
 
-            foreach (Vector2Int Value in Values)
+            foreach (var Value in Values)
             {
                 Result += Value;
             }
@@ -263,9 +261,42 @@ namespace Consolio
         {
             return int.IsNegative(Value.X) || int.IsNegative(Value.Y);
         }
-
+        #endregion
         #endregion
 
+        #region JsonConverter
+        public sealed class JsonConverter : JsonConverter<Vector2Int>
+        {
+            public override void Write(Utf8JsonWriter Writer, Vector2Int Value, JsonSerializerOptions Options)
+            {
+                Writer.WriteStartArray();
+                Writer.WriteNumberValue(Value.X);
+                Writer.WriteNumberValue(Value.Y);
+                Writer.WriteEndArray();
+            }
+
+            public override Vector2Int Read(ref Utf8JsonReader Reader, Type TypeToConvert, JsonSerializerOptions Options)
+            {
+                if (Reader.TokenType != JsonTokenType.StartArray)
+                {
+                    throw new JsonException("Expected an array [X, Y] for Vector2Int.");
+                }
+
+                Reader.Read();
+                var X = Reader.GetInt32();
+
+                Reader.Read();
+                var Y = Reader.GetInt32();
+
+                Reader.Read();
+                if (Reader.TokenType != JsonTokenType.EndArray)
+                {
+                    throw new JsonException("Vector2Int array must contain exactly 2 numbers.");
+                }
+
+                return new Vector2Int(X, Y);
+            }
+        }
         #endregion
     }
 }

@@ -2,8 +2,8 @@ namespace Consolio.Snake
 {
     public sealed class Field
     {
-        public static readonly Vector2Int MinSize = new(10, 20);
-        public static readonly Vector2Int DefaultSize = new(10, 20);
+        public static readonly Vector2Int MinSize = new(6, 6);
+        public static readonly Vector2Int DefaultSize = new(20, 20);
         
         public readonly Vector2Int Size;
         
@@ -27,7 +27,7 @@ namespace Consolio.Snake
         }
 
 
-        public Vector2Int GetNext(Vector2Int Position)
+        public Vector2Int RemoveTail(Vector2Int Position)
         {
             throw new NotImplementedException();
         }
